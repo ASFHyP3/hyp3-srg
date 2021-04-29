@@ -5,11 +5,11 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - master
+      - main
       - develop
   pull_request:
     branches:
-      - master
+      - main
       - develop
 
 env:
@@ -68,7 +68,7 @@ jobs:
           docker push ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:test
       
       - name: Add latest tag
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         run: |
           export SDIST_VERSION=${{ needs.package.outputs.SDIST_VERSION }}
           docker tag ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:${SDIST_VERSION/+/_} \
