@@ -48,18 +48,12 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         run: |
           python setup.py sdist
-          #export SDIST_VERSION=${{ needs.package.outputs.SDIST_VERSION }}
           export CI_JOB_TIMESTAMP=$(date --utc --rfc-3339=seconds)
-          echo "Building ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:${SDIST_VERSION/+/_}"
+          echo "Building ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}"
           docker pull ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:test || true
           docker build --no-cache \
-                -t ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:${SDIST_VERSION/+/_} \
                 --label org.opencontainers.image.created="${CI_JOB_TIMESTAMP}" \
-                --label org.opencontainers.image.version="${SDIST_VERSION}" \
                 --label org.opencontainers.image.revision="${GITHUB_SHA}" \
-                --build-arg S3_PYPI_HOST=${S3_PYPI_HOST} \
-                --build-arg SDIST_SPEC="==${SDIST_VERSION}" .
-          #docker push ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:${SDIST_VERSION/+/_}
       
       #- name: Add test tag
       #  if: github.ref == 'refs/heads/develop'
