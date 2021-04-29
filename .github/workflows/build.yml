@@ -13,7 +13,7 @@ on:
       - develop
 
 env:
-  HYP3_REGISTRY: 845172464411.dkr.ecr.us-west-2.amazonaws.com/hyp3-back-projection:<TAG>
+  HYP3_REGISTRY: 845172464411.dkr.ecr.us-west-2.amazonaws.com/
   S3_PYPI_HOST: hyp3-pypi-west.s3-website-us-west-2.amazonaws.com
   S3_PYPI_BUCKET: hyp3-pypi-west
   AWS_REGION: us-west-2
@@ -52,8 +52,10 @@ jobs:
           echo "Building ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}"
           docker pull ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:test || true
           docker build --no-cache \
+                -t back_projection \
                 --label org.opencontainers.image.created="${CI_JOB_TIMESTAMP}" \
                 --label org.opencontainers.image.revision="${GITHUB_SHA}" \
+                .
       
       #- name: Add test tag
       #  if: github.ref == 'refs/heads/develop'
