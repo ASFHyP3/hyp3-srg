@@ -49,7 +49,6 @@ jobs:
           python setup.py sdist
           export CI_JOB_TIMESTAMP=$(date --utc --rfc-3339=seconds)
           echo "Building ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}"
-          docker pull ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:test || true
           docker build --no-cache \
                 -t hyp3-back-projection \
                 --label org.opencontainers.image.created="${CI_JOB_TIMESTAMP}" \
