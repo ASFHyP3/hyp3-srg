@@ -137,21 +137,21 @@ jobs:
           docker push ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}
       
       - name: Add test tag
-       if: github.ref == 'refs/heads/develop'
-       run: |
+        if: github.ref == 'refs/heads/develop'
+        run: |
          export SDIST_VERSION=${{ needs.package.outputs.SDIST_VERSION }}
          docker tag ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:${SDIST_VERSION/+/_} \
              ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:test
          docker push ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:test
       
       - name: Add latest tag
-       if: github.ref == 'refs/heads/main'
-       run: |
-         export SDIST_VERSION=${{ needs.package.outputs.SDIST_VERSION }}
-         docker tag ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:${SDIST_VERSION/+/_} \
-             ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:latest
-         docker push ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:latest
+        if: github.ref == 'refs/heads/main'
+        run: |
+          export SDIST_VERSION=${{ needs.package.outputs.SDIST_VERSION }}
+          docker tag ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:${SDIST_VERSION/+/_} \
+              ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:latest
+          docker push ${HYP3_REGISTRY}/${GITHUB_REPOSITORY##*/}:latest
       
       - name: Logout of Amazon ECR
-       if: always()
-       run: docker logout ${HYP3_REGISTRY}
+        if: always()
+        run: docker logout ${HYP3_REGISTRY}
