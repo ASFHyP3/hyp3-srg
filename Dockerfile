@@ -31,10 +31,9 @@ COPY dist/*  /home/user/
 RUN python3 -m pip install /home/user/back_projection-0.0.0.tar.gz && \
     tar -xvf back_projection-0.0.0.tar.gz && \
     cd back_projection-0.0.0/back_projection/src && \
-    chmod +x * && \
-    chmod +x */* && \
     source build_proc && \
-    mkdir "/home/user/back_projection-0.0.0/back_projection/src/output"
+    mkdir /home/user/back_projection-0.0.0/back_projection/src/output 2>/dev/null && \
+    ls /home/user/back_projection-0.0.0/back_projection/src
 
 ENV PROC_HOME="/home/user/back_projection-0.0.0/back_projection/src"
 
