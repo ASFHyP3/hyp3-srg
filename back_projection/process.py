@@ -5,7 +5,9 @@ projector processing
 import os
 import argparse
 import logging
+
 from pathlib import Path
+from zipfile import ZipFile
 
 #from back_projection import __version__
 
@@ -50,11 +52,24 @@ def back_projection(granule_list: str, username: str, password: str, polarizatio
         ret = os.system(make_tiff)
 
     # Remove all of the temporary files
-    remove_files  = "rm *.list *.geo *.EOF *.dem *.rsc *.orbtiming "
+    remove_files  = "rm *.list *.EOF *.dem *.orbtiming "
     remove_files += "*.full latloncoords preciseorbitfiles precise_orbtiming params"
     ret = os.system(remove_files)
     remove_SAFE = "rm -rf *.SAFE"
     ret = os.system(remove_SAFE)
+
+    move_geo_files = "mv *.geo "+HOME+"/output/"
+    move_rsc_files = "mv elevation.dem.rsc "+HOME+"/output/"
+    
+    ret = os.system(move_geo_files)
+    ret = os.system(move_rsc_files)
+    ret = os.system("rm *.rsc")
+
+    with ZipFile(granule_list[0] + ".zip","w") as zipObj:
+        for folder_name, sub_folders, filenames in os.walk(HOME+"/output/"):
+            for filename in filenames:
+                file_path = os.path.join(folder_name, filename)
+                zipObj.write(file_path)
 
     # Return the paths to the tiffs
     products = []
