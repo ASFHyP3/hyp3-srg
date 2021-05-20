@@ -17,39 +17,49 @@ log = logging.getLogger(__name__)
 
 HOME = os.environ['PROC_HOME']
 
-def back_projection(granule_list: str, username: str, password: str, polarization: str) -> Path:
+def back_projection(granule: str, username: str, password: str) -> Path:
     """Create GSLCS and Convert them to tiffs for viewing
 
     Args:
-        granule_list: a list of granule names to be processed.
+        granule: granule name to be processed.
         username: hyp3 username
         password: hyp3 password
-        polarization: Choose either vv or vh. Default is vv.
     """
 
     # Make granules.list file to be read by sentinel_cpu.py to download necessary granules
-    filename = "granule.list"
-    output_string = ""
-    for granule in granule_list:
-        output_string += (granule + ".zip" + "\n")
-    
-    file = open(filename, "w")
-    print("GRANULES TO DOWNLOAD: ", output_string)
+    file = open("granule.list", "w")
+    print("GRANULES TO DOWNLOAD: ", granule)
+    output_string = granule + ".zip\n"
     file.write(output_string)
     file.close()
 
-    # Run the back_projection through sentinel_cpu.py 
+    # Run the back_projection through sentinel_cpu.py VV
     run_backprojection  = HOME + "/sentinel/sentinel_cpu.py --username \""
-    run_backprojection += username + "\" --password \"" + password + "\" --polarization " + polarization
+    run_backprojection += username + "\" --password \"" + password + "\""
     print("Command: ", run_backprojection)
     ret = os.system(run_backprojection)
 
     # Convert each gslc to a multiband tiff
     # (band 1: complex, band 2: real, band 3: amplitude)
-    for granule in granule_list:
-        make_tiff = "python3 " + HOME + "/make_tiff.py " + granule + ".geo " + "elevation.dem.rsc"
-        print(make_tiff)
-        ret = os.system(make_tiff)
+    make_tiff = "python3 " + HOME + "/make_tiff.py " + granule + ".geo " + "elevation.dem.rsc " + granule
+    print(make_tiff + "_VV.tiff")
+    ret = os.system(make_tiff + "_VV.tiff")
+
+    move_vv_file = "mv *.geo "+HOME+"/output/"+granule+"_VV.geo"
+    ret = os.system(move_vv_file)
+
+    # Run the back_projection through sentinel_cpu.py VH
+    run_backprojection += " --polarization vh --use_existing_data True"
+    print("Command: ", run_backprojection)
+    ret = os.system(run_backprojection)
+
+    # Convert each gslc to a multiband tiff
+    # (band 1: complex, band 2: real, band 3: amplitude)
+    print(make_tiff + "_VH.tiff")
+    ret = os.system(make_tiff + "_VH.tiff")
+
+    move_vh_file = "mv *.geo "+HOME+"/output/"+granule+"_VH.geo"
+    ret = os.system(move_vh_file)
 
     # Remove all of the temporary files
     remove_files  = "rm *.list *.EOF *.dem *.orbtiming "
@@ -57,26 +67,17 @@ def back_projection(granule_list: str, username: str, password: str, polarizatio
     ret = os.system(remove_files)
     remove_SAFE = "rm -rf *.SAFE"
     ret = os.system(remove_SAFE)
-
-    move_geo_files = "mv *.geo "+HOME+"/output/"
     move_rsc_files = "mv elevation.dem.rsc "+HOME+"/output/"
-    
-    ret = os.system(move_geo_files)
     ret = os.system(move_rsc_files)
     ret = os.system("rm *.rsc")
 
-    with ZipFile(granule_list[0] + ".zip","w") as zipObj:
+    with ZipFile(granule + ".zip","w") as zipObj:
         for folder_name, sub_folders, filenames in os.walk(HOME+"/output/"):
             for filename in filenames:
                 file_path = os.path.join(folder_name, filename)
                 zipObj.write(file_path)
 
-    # Return the paths to the tiffs
-    products = []
-    for granule in granule_list:
-        products.append(HOME + "/output/" + granule + ".tiff")
-
-    return products
+    return granule+".zip"
 
 def main():
     """back_projection entrypoint"""
@@ -84,18 +85,16 @@ def main():
         prog='back_projection',
         description=__doc__,
     )
-    parser.add_argument("granule_list", metavar='N', type=str, nargs='+',
+    parser.add_argument("granule", metavar='N', type=str, nargs='+',
                         help="list 1 or more granule names to be processed.")
     parser.add_argument("--username", type=str,
                         help="hyp3 username")
     parser.add_argument('--password', type=str, 
                         help="hyp3 password")
-    parser.add_argument('--polarization', type=str, default="vv",
-                        help="Specify vv or vh Polarization. Default=vv")
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
-    return back_projection(args.granule_list, args.username, args.password)
+    return back_projection(args.granule, args.username, args.password)
 
 if __name__ == "__main__":
     products = main()
