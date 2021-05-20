@@ -20,35 +20,30 @@ def main():
     HyP3 entrypoint for back_projection
     """
     parser = ArgumentParser()
-    parser.add_argument("granule_list", metavar='granule', type=str, nargs='+',
-                        help="list 1 or more granule names to be processed.")
+    parser.add_argument("granule", metavar='granule', type=str, nargs='+',
+                        help="name of granule to be processed")
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument("--username", type=str,
                         help="hyp3 username")
     parser.add_argument('--password', type=str, 
                         help="hyp3 password")
-    parser.add_argument('--polarization', type=str, default="vv",
-                        help="Specify vv or vh Polarization. Default=vv")
 
     args = parser.parse_args()
 
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
-    product_list = back_projection.back_projection(
-            granule_list=args.granule_list,
+    product_path_string = back_projection.back_projection(
+            granule_list=args.granule,
             username=args.username,
             password=args.password,
-            polarization=args.polarization
     )
 
     print(os.listdir(HOME + "/output"))
     
-    for product_path_string in product_list:
-        if args.bucket:
-            product_path = Path(product_path_string)
-            upload_file_to_s3(product_path, args.bucket, args.bucket_prefix)
+    if args.bucket:
+        upload_file_to_s3(Path(product_path_string), args.bucket, args.bucket_prefix)
 
 if __name__ == '__main__':
     main()
