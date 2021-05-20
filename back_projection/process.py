@@ -94,7 +94,7 @@ def main():
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
-    return back_projection(args.granule_list, args.username, args.password)
+    return back_projection(args.granule, args.username, args.password)
 
 if __name__ == "__main__":
     product = main()
