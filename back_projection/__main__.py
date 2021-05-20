@@ -20,8 +20,8 @@ def main():
     HyP3 entrypoint for back_projection
     """
     parser = ArgumentParser()
-    parser.add_argument("granule", metavar='granule', type=str, nargs='+',
-                        help="name of granule to be processed")
+    parser.add_argument("granule", metavar='granule', type=str,
+                        help="name of granule to be processed.")
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument("--username", type=str,
@@ -35,7 +35,7 @@ def main():
                         datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
 
     product_path_string = back_projection.back_projection(
-            granule_list=args.granule,
+            granule=args.granule,
             username=args.username,
             password=args.password,
     )

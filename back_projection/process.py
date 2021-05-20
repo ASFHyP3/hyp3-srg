@@ -85,8 +85,8 @@ def main():
         prog='back_projection',
         description=__doc__,
     )
-    parser.add_argument("granule", metavar='N', type=str, nargs='+',
-                        help="list 1 or more granule names to be processed.")
+    parser.add_argument("granule", type=str,
+                        help="granule name to be processed")
     parser.add_argument("--username", type=str,
                         help="hyp3 username")
     parser.add_argument('--password', type=str, 
@@ -94,8 +94,8 @@ def main():
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
-    return back_projection(args.granule, args.username, args.password)
+    return back_projection(args.granule_list, args.username, args.password)
 
 if __name__ == "__main__":
-    products = main()
-    print(products)
+    product = main()
+    print(product)
