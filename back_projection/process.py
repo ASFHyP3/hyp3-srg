@@ -9,13 +9,14 @@ import logging
 from pathlib import Path
 from zipfile import ZipFile
 
-#from back_projection import __version__
+# from back_projection import __version__
 
 __version__ = 1.0
 
 log = logging.getLogger(__name__)
 
 HOME = os.environ['PROC_HOME']
+
 
 def back_projection(granule: str, username: str, password: str) -> Path:
     """Create GSLCS and Convert them to tiffs for viewing
@@ -26,7 +27,8 @@ def back_projection(granule: str, username: str, password: str) -> Path:
         password: hyp3 password
     """
 
-    # Make granules.list file to be read by sentinel_cpu.py to download necessary granules
+    # Make granules.list file to be read by sentinel_cpu.py
+    # to download necessary granules
     file = open("granule.list", "w")
     print("GRANULES TO DOWNLOAD: ", granule)
     output_string = granule + ".zip\n"
@@ -34,14 +36,15 @@ def back_projection(granule: str, username: str, password: str) -> Path:
     file.close()
 
     # Run the back_projection through sentinel_cpu.py VV
-    run_backprojection  = HOME + "/sentinel/sentinel_cpu.py --username \""
+    run_backprojection = HOME + "/sentinel/sentinel_cpu.py --username \""
     run_backprojection += username + "\" --password \"" + password + "\""
     print("Command: ", run_backprojection)
     ret = os.system(run_backprojection)
 
     # Convert each gslc to a multiband tiff
     # (band 1: complex, band 2: real, band 3: amplitude)
-    make_tiff = "python3 " + HOME + "/make_tiff.py " + granule + ".geo " + "elevation.dem.rsc " + granule
+    make_tiff = "python3 " + HOME + "/make_tiff.py " + granule + ".geo "
+    make_tiff += "elevation.dem.rsc " + granule
     print(make_tiff + "_VV.tiff")
     ret = os.system(make_tiff + "_VV.tiff")
 
@@ -62,22 +65,25 @@ def back_projection(granule: str, username: str, password: str) -> Path:
     ret = os.system(move_vh_file)
 
     # Remove all of the temporary files
-    remove_files  = "rm *.list *.EOF *.dem *.orbtiming "
-    remove_files += "*.full latloncoords preciseorbitfiles precise_orbtiming params"
+    remove_files = "rm *.list *.EOF *.dem *.orbtiming "
+    remove_files += "*.full latloncoords preciseorbitfiles"
+    remove_files += "precise_orbtiming params"
     ret = os.system(remove_files)
     remove_SAFE = "rm -rf *.SAFE"
     ret = os.system(remove_SAFE)
     move_rsc_files = "mv elevation.dem.rsc "+HOME+"/output/"
     ret = os.system(move_rsc_files)
     ret = os.system("rm *.rsc")
+    print(ret)
 
-    with ZipFile(granule + ".zip","w") as zipObj:
+    with ZipFile(granule + ".zip", "w") as zipObj:
         for folder_name, sub_folders, filenames in os.walk(HOME+"/output/"):
             for filename in filenames:
                 file_path = os.path.join(folder_name, filename)
                 zipObj.write(file_path)
 
     return granule+".zip"
+
 
 def main():
     """back_projection entrypoint"""
@@ -89,12 +95,14 @@ def main():
                         help="granule name to be processed")
     parser.add_argument("--username", type=str,
                         help="hyp3 username")
-    parser.add_argument('--password', type=str, 
+    parser.add_argument('--password', type=str,
                         help="hyp3 password")
-    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
+    parser.add_argument('--version', action='version',
+                        version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
     return back_projection(args.granule, args.username, args.password)
+
 
 if __name__ == "__main__":
     product = main()

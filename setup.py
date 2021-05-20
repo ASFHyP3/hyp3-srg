@@ -7,7 +7,7 @@ readme = Path(__file__).parent / 'README.md'
 setup(
     name='back_projection',
     use_scm_version=False,
-    description='This is a process to process L0 Raw Products using a back projection algorithm',
+    description='Process L0 Raw Products using a back projection algorithm',
     long_description=readme.read_text(),
     long_description_content_type='text/markdown',
 

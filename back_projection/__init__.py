@@ -1,4 +1,4 @@
-"""This is a program to process L0 Raw Products using a back projection algorithm"""
+"""Process L0 Raw Products using a back projection algorithm"""
 
 from importlib.metadata import PackageNotFoundError, version
 
@@ -8,7 +8,7 @@ try:
     __version__ = version(__name__)
 except PackageNotFoundError:
     print(f'{__name__} package is not installed!\n'
-          f'Install in editable/develop mode via (from the top of this repo):\n'
+          f'To install in editable/develop mode (from the repo\'s root):\n'
           f'   python -m pip install -e .[develop]\n'
           f'Or, to just get the version number use:\n'
           f'   python setup.py --version')

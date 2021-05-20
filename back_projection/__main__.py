@@ -7,13 +7,13 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from hyp3lib.aws import upload_file_to_s3
-from hyp3lib.image import create_thumbnail
 
 import back_projection
 
 __version__ = 1.0
 
 HOME = os.environ['PROC_HOME']
+
 
 def main():
     """
@@ -22,11 +22,13 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("granule", metavar='granule', type=str,
                         help="name of granule to be processed.")
-    parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
-    parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
+    parser.add_argument('--bucket',
+                        help='S3 bucket HyP3 for upload the final product(s)')
+    parser.add_argument('--bucket-prefix', default='',
+                        help='Add a bucket prefix to product(s)')
     parser.add_argument("--username", type=str,
                         help="hyp3 username")
-    parser.add_argument('--password', type=str, 
+    parser.add_argument('--password', type=str,
                         help="hyp3 password")
 
     args = parser.parse_args()
@@ -41,10 +43,12 @@ def main():
     )
 
     print(os.listdir(HOME + "/output"))
-    
+
     if args.bucket:
-        upload_file_to_s3(Path(product_path_string), args.bucket, args.bucket_prefix)
+        upload_file_to_s3(Path(product_path_string),
+                          args.bucket,
+                          args.bucket_prefix)
+
 
 if __name__ == '__main__':
     main()
- 
