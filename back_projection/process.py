@@ -2,20 +2,15 @@
 projector processing
 """
 
-import os
 import argparse
+import os
 import logging
-
 from pathlib import Path
 from zipfile import ZipFile
-
-# from back_projection import __version__
 
 __version__ = 1.0
 
 log = logging.getLogger(__name__)
-
-HOME = os.environ['PROC_HOME']
 
 
 def back_projection(granule: str, username: str, password: str) -> Path:
@@ -26,6 +21,8 @@ def back_projection(granule: str, username: str, password: str) -> Path:
         username: hyp3 username
         password: hyp3 password
     """
+
+    HOME = os.environ['PROC_HOME']
 
     # Make granules.list file to be read by sentinel_cpu.py
     # to download necessary granules

@@ -1,18 +1,15 @@
 """
 projector processing for HyP3
 """
-import os
 import logging
+import os
 from argparse import ArgumentParser
 from pathlib import Path
 
+import back_projection
 from hyp3lib.aws import upload_file_to_s3
 
-import back_projection
-
 __version__ = 1.0
-
-HOME = os.environ['PROC_HOME']
 
 
 def main():
@@ -42,6 +39,7 @@ def main():
             password=args.password,
     )
 
+    HOME = os.environ['PROC_HOME']
     print(os.listdir(HOME + "/output"))
 
     if args.bucket:
