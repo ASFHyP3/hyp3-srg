@@ -62,7 +62,7 @@ def back_projection(granule: str, username: str, password: str) -> Path:
 
     # Remove all of the temporary files
     remove_files = "rm *.list *.EOF *.dem *.orbtiming "
-    remove_files += "*.full latloncoords preciseorbitfiles"
+    remove_files += "*.full latloncoords preciseorbitfiles "
     remove_files += "precise_orbtiming params"
     ret = os.system(remove_files)
     remove_SAFE = "rm -rf *.SAFE"
