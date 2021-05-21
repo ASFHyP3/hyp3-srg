@@ -76,7 +76,7 @@ def back_projection(granule: str, username: str, password: str) -> Path:
         for folder_name, sub_folders, filenames in os.walk(HOME+"/output/"):
             for filename in filenames:
                 file_path = os.path.join(folder_name, filename)
-                zipObj.write(file_path)
+                zipObj.write(file_path, os.path.basename(file_path))
 
     return granule+".zip"
 
