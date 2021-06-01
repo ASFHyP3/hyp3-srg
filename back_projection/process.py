@@ -12,7 +12,7 @@ __version__ = 1.0
 log = logging.getLogger(__name__)
 
 
-def back_projection(granule: str, username: str, password: str) -> Path:
+def back_projection(granule: str, username: str, password: str, use_gpu: bool) -> Path:
     """Create GSLCS and Convert them to tiffs for viewing
 
     Args:
@@ -26,14 +26,22 @@ def back_projection(granule: str, username: str, password: str) -> Path:
     # Make granules.list file to be read by sentinel_cpu.py
     # to download necessary granules
     file = open("granule.list", "w")
-    print("GRANULES TO DOWNLOAD: ", granule)
     output_string = granule + ".zip\n"
     file.write(output_string)
     file.close()
 
-    # Run the back_projection through sentinel_cpu.py VV
-    run_backprojection = HOME + "/sentinel/sentinel_cpu.py --username \""
-    run_backprojection += username + "\" --password \"" + password + "\""
+    # Run the back_projection through sentinel_cpu.py or sentinel_gpu.py VV
+    run_backprojection = ""
+    if use_gpu:
+        print("RUNNING WITH GPU")
+        print("----------------")
+        run_backprojection = HOME + "/sentinel/sentinel_gpu.py"
+    else:
+        print("RUNNING WITH CPU")
+        print("----------------")
+        run_backprojection = HOME + "/sentinel/sentinel_cpu.py"
+    run_backprojection += " --username \"" + username + "\" --password \"" + password + "\""
+    print("GRANULES TO DOWNLOAD: ", granule)
     print("Command: ", run_backprojection)
     ret = os.system(run_backprojection)
 
@@ -93,11 +101,13 @@ def main():
                         help="hyp3 username")
     parser.add_argument('--password', type=str,
                         help="hyp3 password")
+    parser.add_arguemnt('--use_gpu', action='store_true',
+                        help="use gpu rather than cpu for processing")
     parser.add_argument('--version', action='version',
                         version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
-    return back_projection(args.granule, args.username, args.password)
+    return back_projection(args.granule, args.username, args.password, args.use_gpu)
 
 
 if __name__ == "__main__":
