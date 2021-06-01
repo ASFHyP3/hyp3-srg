@@ -27,6 +27,8 @@ def main():
                         help="hyp3 username")
     parser.add_argument('--password', type=str,
                         help="hyp3 password")
+    parser.add_argument('--use_gpu', action='store_true',
+                        help="use gpu rather than cpu for processing")
 
     args = parser.parse_args()
 
@@ -37,6 +39,7 @@ def main():
             granule=args.granule,
             username=args.username,
             password=args.password,
+            use_gpu=args.use_gpu
     )
 
     HOME = os.environ['PROC_HOME']
