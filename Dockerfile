@@ -16,7 +16,10 @@ LABEL org.opencontainers.image.source="https://github.com/ASFHyP3/hyp3-back-proj
 # LABEL org.opencontainers.image.version=""
 # LABEL org.opencontainers.image.revision=""
 
-RUN apt-get update && apt-get install -y --no-install-recommends wget gcc gfortran make unzip vim gdal-bin python3-pip libfftw3-dev libfftw3-doc && \
+ENV TZ=America/Anchorage
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential wget gcc gfortran libgfortran-8-dev make unzip vim gdal-bin python3-pip libsqlite3-dev libfftw3-dev libfftw3-doc nvidia-cuda-toolkit && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -ms /bin/bash user
