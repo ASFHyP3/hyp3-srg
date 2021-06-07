@@ -1,6 +1,7 @@
 """
 projector processing
 """
+import subprocess
 import argparse
 import logging
 import os
@@ -30,9 +31,19 @@ def back_projection(granule: str, username: str, password: str, use_gpu: bool) -
     file.write(output_string)
     file.close()
 
+    gpu_exists = False
+    if use_gpu:
+        #  grab gpu number, -1 if there isn't one
+        proc = subprocess.Popen(HOME+"/sentinel/bestgpu.sh",stdout=subprocess.PIPE, shell=True)
+        (bestGPU,err)=proc.communicate()
+        bestGPU=str(int(bestGPU.strip())) 
+        print("GPU: ", bestGPU)
+        if bestGPU != "-1":
+            gpu_exists = True
+
     # Run the back_projection through sentinel_cpu.py or sentinel_gpu.py VV
     run_backprojection = ""
-    if use_gpu:
+    if use_gpu and gpu_exists:
         print("RUNNING WITH GPU")
         print("----------------")
         run_backprojection = HOME + "/sentinel/sentinel_gpu.py"
