@@ -2,8 +2,8 @@
 projector processing
 """
 import logging
-import subprocess
 import argparse
+import subprocess
 import os
 from pathlib import Path
 from zipfile import ZipFile
