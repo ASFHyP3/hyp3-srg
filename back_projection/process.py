@@ -56,8 +56,8 @@ def back_projection(granule: str, username: str, password: str, use_gpu: bool) -
     print("Command: ", run_backprojection)
     ret = os.system(run_backprojection)
 
-    # Convert each gslc to a multiband tiff
-    # (band 1: complex, band 2: real, band 3: amplitude)
+    # create a amplitude tiff
+    # band 1: amplitude
     make_tiff = "python3 " + HOME + "/make_tiff.py " + granule + ".geo "
     make_tiff += "elevation.dem.rsc " + granule
     print(make_tiff + "_VV.tiff")
@@ -71,8 +71,8 @@ def back_projection(granule: str, username: str, password: str, use_gpu: bool) -
     print("Command: ", run_backprojection)
     ret = os.system(run_backprojection)
 
-    # Convert each gslc to a multiband tiff
-    # (band 1: complex, band 2: real, band 3: amplitude)
+    # create amplitude tiff
+    # band 1: amplitude
     print(make_tiff + "_VH.tiff")
     ret = os.system(make_tiff + "_VH.tiff")
 
