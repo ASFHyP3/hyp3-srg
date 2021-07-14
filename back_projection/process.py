@@ -2,8 +2,8 @@
 projector processing
 """
 import subprocess
-import argparse
 import logging
+import argparse
 import os
 from pathlib import Path
 from zipfile import ZipFile
@@ -34,9 +34,9 @@ def back_projection(granule: str, username: str, password: str, use_gpu: bool) -
     gpu_exists = False
     if use_gpu:
         #  grab gpu number, -1 if there isn't one
-        proc = subprocess.Popen(HOME+"/sentinel/bestgpu.sh",stdout=subprocess.PIPE, shell=True)
-        (bestGPU,err)=proc.communicate()
-        bestGPU=str(int(bestGPU.strip())) 
+        proc = subprocess.Popen(HOME+"/sentinel/bestgpu.sh", stdout=subprocess.PIPE, shell=True)
+        (bestGPU, err) = proc.communicate()
+        bestGPU = str(int(bestGPU.strip()))
         print("GPU: ", bestGPU)
         if bestGPU != "-1":
             gpu_exists = True
