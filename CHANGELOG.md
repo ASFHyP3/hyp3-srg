@@ -8,3 +8,5 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/andrewplayer3/back_projection/compare/v0.0.0...develop) -- likely 0.0.1
 
+### Added
+-- Added validation for gpu existance (defaults to cpu if none exists)
