@@ -1,2 +1,59 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hyp3_back_projection"
+requires-python = ">=3.8"
+authors = [
+    {name="ASF Tools Team", email="UAF-asf-apd@alaska.edu"},
+]
+description = "HyP3 plugin for back-projection processing"
+license = {text = "BSD-3-Clause"}
+classifiers=[
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "hyp3lib>=3,<4",
+    # insert python dependencies as list here
+]
+dynamic = ["version", "readme"]
+
+[project.optional-dependencies]
+develop = [
+    "flake8",
+    "flake8-import-order",
+    "flake8-blind-except",
+    "flake8-builtins",
+    "pytest",
+    "pytest-cov",
+    "pytest-console-scripts",
+]
+
+[project.urls]
+Homepage = "https://github.com/ASFHyP3/hyp3-back-projection"
+Documentation = "https://hyp3-docs.asf.alaska.edu"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+script_launch_mode = "subprocess"
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/markdown"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]

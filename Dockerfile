@@ -1,44 +1,48 @@
-FROM ubuntu:latest
+FROM condaforge/mambaforge:latest
 
 # For opencontainers label definitions, see:
 #    https://github.com/opencontainers/image-spec/blob/master/annotations.md
-LABEL org.opencontainers.image.title="Back_projection"
-LABEL org.opencontainers.image.description="This is a process to process L0 Raw Products using a back projection algorithm"
+LABEL org.opencontainers.image.title="HyP3 back-projection"
+LABEL org.opencontainers.image.description="HyP3 plugin for back-projection processing"
 LABEL org.opencontainers.image.vendor="Alaska Satellite Facility"
-LABEL org.opencontainers.image.authors="ASF APD/Tools Team <uaf-asf-apd@alaska.edu>"
+LABEL org.opencontainers.image.authors="ASF Tools Team <UAF-asf-apd@alaska.edu>"
 LABEL org.opencontainers.image.licenses="BSD-3-Clause"
 LABEL org.opencontainers.image.url="https://github.com/ASFHyP3/hyp3-back-projection"
 LABEL org.opencontainers.image.source="https://github.com/ASFHyP3/hyp3-back-projection"
-# LABEL org.opencontainers.image.documentation=""
+LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 # Dynamic lables to define at build time via `docker build --label`
 # LABEL org.opencontainers.image.created=""
 # LABEL org.opencontainers.image.version=""
 # LABEL org.opencontainers.image.revision=""
 
-ENV TZ=America/Anchorage
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+ARG DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=true
 
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential wget gcc gfortran libgfortran-8-dev make unzip vim gdal-bin python3-pip libsqlite3-dev libfftw3-dev libfftw3-doc nvidia-cuda-toolkit && \
+RUN apt-get update && apt-get install -y --no-install-recommends unzip vim && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN useradd -ms /bin/bash user
+ARG CONDA_UID=1000
+ARG CONDA_GID=1000
 
-USER user
+RUN groupadd -g "${CONDA_GID}" --system conda && \
+    useradd -l -u "${CONDA_UID}" -g "${CONDA_GID}" --system -d /home/conda -m  -s /bin/bash conda && \
+    chown -R conda:conda /opt && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/conda/.profile && \
+    echo "conda activate base" >> /home/conda/.profile
+
+
+USER ${CONDA_UID}
 SHELL ["/bin/bash", "-l", "-c"]
-ENV PYTHONDONTWRITEBYTECODE=true
-WORKDIR /home/user
+WORKDIR /home/conda/
 
-COPY dist/*  /home/user/
+COPY --chown=${CONDA_UID}:${CONDA_GID} . /hyp3-back-projection/
 
-RUN python3 -m pip install /home/user/back_projection-0.0.0.tar.gz && \
-    tar -xvf back_projection-0.0.0.tar.gz && \
-    cd back_projection-0.0.0/back_projection/src && \
-    source build_proc && \
-    mkdir /home/user/back_projection-0.0.0/back_projection/src/output 2>/dev/null && \
-    ls /home/user/back_projection-0.0.0/back_projection/src
+RUN mamba env create -f /hyp3-back-projection/environment.yml && \
+    conda clean -afy && \
+    conda activate hyp3-back-projection && \
+    sed -i 's/conda activate base/conda activate hyp3-back-projection/g' /home/conda/.profile && \
+    python -m pip install --no-cache-dir /hyp3-back-projection
 
-ENV PROC_HOME="/home/user/back_projection-0.0.0/back_projection/src"
-
-ENTRYPOINT ["python3", "/home/user/back_projection-0.0.0/back_projection/__main__.py"]
+ENTRYPOINT ["/hyp3-back-projection/src/hyp3_back_projection/etc/entrypoint.sh"]
 CMD ["-h"]
