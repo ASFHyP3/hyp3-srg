@@ -1,3 +1,3 @@
-# Back_projection
+# HyP3 back-projection
 
-This is a process to process L0 Raw Products using a back projection algorithm
+HyP3 plugin for back-projection processing
