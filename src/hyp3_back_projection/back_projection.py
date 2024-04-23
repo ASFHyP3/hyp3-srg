@@ -38,8 +38,8 @@ def back_project(
     if work_dir is None:
         work_dir = Path.cwd()
 
-    utils.download_granule(granule[0], work_dir)
-    # Download orbit file
+    granule_path = utils.download_granule(granule, work_dir)
+    orbit_path = utils.download_orbit(granule, work_dir)
     # Download DEM
     # call sentinel_scene_cup.py via subprocess
     product_file = None
@@ -60,7 +60,7 @@ def main():
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     # TODO: will eventually need to add to support multiple granules
-    parser.add_argument('granule', nargs=1, help='Level-0 S1 granule to back-project.')
+    parser.add_argument('granule', help='Level-0 S1 granule to back-project.')
     args = parser.parse_args()
 
     back_project(**args.__dict__)

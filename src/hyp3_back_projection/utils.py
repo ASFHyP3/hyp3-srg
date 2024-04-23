@@ -5,6 +5,7 @@ from platform import system
 from typing import Tuple
 
 import asf_search
+from hyp3lib.get_orb import downloadSentinelOrbitFile
 
 
 ESA_HOST = 'dataspace.copernicus.eu'
@@ -81,3 +82,15 @@ def download_granule(granule_name: str, output_dir: Path):
     results = asf_search.granule_search([granule_name])
     results.download(path=output_dir, session=session)
     return output_dir / granule_name
+
+
+def download_orbit(granule_name: str, output_dir: Path):
+    """Download a S1 orbit file. Prefer using the ESA API,
+    but fallback to ASF if needed.
+
+    Args:
+        granule_name: Name of the granule to download
+        output_dir: Directory to save the orbit file in
+    """
+    orbit_path, _ = downloadSentinelOrbitFile(granule_name, str(output_dir), esa_credentials=get_esa_credentials())
+    return orbit_path
