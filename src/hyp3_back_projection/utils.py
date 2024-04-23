@@ -78,6 +78,6 @@ def download_granule(granule_name: str, output_dir: Path):
     username, password = get_earthdata_credentials()
     session = asf_search.ASFSession().auth_with_creds(username, password)
 
-    results = asf_search.granule_search([granule_name], session=session)
-    results.download(path=output_dir)
+    results = asf_search.granule_search([granule_name])
+    results.download(path=output_dir, session=session)
     return output_dir / granule_name
