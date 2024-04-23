@@ -17,9 +17,12 @@ LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 # LABEL org.opencontainers.image.revision=""
 
 ARG DEBIAN_FRONTEND=noninteractive
-ENV PYTHONDONTWRITEBYTECODE=true
+ARG BACK_PROJECTION_TAG=0.2.0
 
-RUN apt-get update && apt-get install -y --no-install-recommends unzip vim && \
+ENV PYTHONDONTWRITEBYTECODE=true
+ENV PROC_HOME=/home/conda/back-projection
+
+RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl build-essential gfortran && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG CONDA_UID=1000
@@ -35,6 +38,11 @@ RUN groupadd -g "${CONDA_GID}" --system conda && \
 USER ${CONDA_UID}
 SHELL ["/bin/bash", "-l", "-c"]
 WORKDIR /home/conda/
+
+RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v0.2.0.tar.gz > ./back-projection.tar.gz && \
+    mkdir -p ./back-projection && \
+    tar -xvf ./back-projection.tar.gz -C ./back-projection/ --strip=1 && \
+    rm ./back-projection.tar.gz
 
 COPY --chown=${CONDA_UID}:${CONDA_GID} . /hyp3-back-projection/
 
