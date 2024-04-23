@@ -40,8 +40,9 @@ def back_project(
 
     granule_path = utils.download_granule(granule, work_dir)
     orbit_path = utils.download_orbit(granule, work_dir)
-    # Download DEM
-    # call sentinel_scene_cup.py via subprocess
+    # Download DEM (likely using DEM/createDEMcop.py)
+    # Alternatively, download DEM from ASF and format to look like the DEM from createDEMcop.py
+    # call sentinel/sentinel_scene_cup.py via subprocess
     product_file = None
     return product_file
 

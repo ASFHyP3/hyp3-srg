@@ -1,13 +1,15 @@
+import logging
 import netrc
 import os
 from pathlib import Path
 from platform import system
-from typing import Tuple
+from typing import List, Tuple
 
 import asf_search
 from hyp3lib.get_orb import downloadSentinelOrbitFile
 
 
+log = logging.getLogger(__name__)
 ESA_HOST = 'dataspace.copernicus.eu'
 EARTHDATA_HOST = 'urs.earthdata.nasa.gov'
 
@@ -94,3 +96,18 @@ def download_orbit(granule_name: str, output_dir: Path):
     """
     orbit_path, _ = downloadSentinelOrbitFile(granule_name, str(output_dir), esa_credentials=get_esa_credentials())
     return orbit_path
+
+
+def call_stanford_module(local_name, args: List = []):
+    """Call a Stanford Processor modules (via subprocess) with the given arguments.
+
+    Args:
+        local_name: Name of the module to call (e.g. 'sentinel/sentinel_scene_cpu.py')
+        args: List of arguments to pass to the module
+    """
+    proc_home = os.environ.get('PROC_HOME', None)
+    if proc_home is None:
+        raise ValueError('PROC_HOME environment variable is not set. Location of Stanford modules is unknown.')
+    proc_home = Path(proc_home)
+    log.info(f'Calling {local_name} with arguments: {" ".join(args)}')
+    # TODO: Actually call the module via subprocess
