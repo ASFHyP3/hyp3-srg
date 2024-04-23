@@ -23,7 +23,7 @@ classifiers=[
 ]
 dependencies = [
     "hyp3lib>=3,<4",
-    # insert python dependencies as list here
+    "asf_search",
 ]
 dynamic = ["version", "readme"]
 
@@ -41,6 +41,9 @@ develop = [
 [project.urls]
 Homepage = "https://github.com/ASFHyP3/hyp3-back-projection"
 Documentation = "https://hyp3-docs.asf.alaska.edu"
+
+[project.entry-points.hyp3]
+back_projection = "hyp3_back_projection.back_projection:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

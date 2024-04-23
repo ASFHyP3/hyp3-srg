@@ -6,36 +6,41 @@ import argparse
 import logging
 from pathlib import Path
 
-from hyp3_back_projection import __version__
+from hyp3_back_projection import utils
+
 
 log = logging.getLogger(__name__)
 
 
-def process_back_projection(greeting: str = 'Hello world!') -> Path:
-    """Create a greeting product
+def back_project(granule) -> Path:
+    """Back-project a Sentinel-1 level-0 granule.
 
     Args:
-        greeting: Write this greeting to a product file (Default: "Hello world!" )
+        granule: Sentinel-1 level-0 granule to back-project
     """
-    log.debug(f'Greeting: {greeting}')
-    product_file = Path('greeting.txt')
-    product_file.write_text(greeting)
+    utils.download_granule(granule)
+    # Download orbit file
+    # Download DEM
+    # call sentinel_scene_cup.py via subprocess
+    product_file = None
     return product_file
 
 
 def main():
     """process_back_projection entrypoint"""
-    parser = argparse.ArgumentParser(
-        prog='process_back_projection',
-        description=__doc__,
-    )
-    parser.add_argument('--greeting', default='Hello world!',
-                        help='Write this greeting to a product file')
-    parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
+    parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
+    parser.add_argument('--esa-username', default=None, help="Username for ESA's Copernicus Data Space Ecosystem")
+    parser.add_argument('--esa-password', default=None, help="Password for ESA's Copernicus Data Space Ecosystem")
+    parser.add_argument('--earthdata-username', default=None, help="Username for NASA's EarthData")
+    parser.add_argument('--earthdata-password', default=None, help="Password for NASA's EarthData")
+    # TODO: will eventually need to add to support multiple granules
+    parser.add_argument('granule', nargs=1, help='Level-0 S1 granule to back-project.')
     args = parser.parse_args()
 
-    process_back_projection(**args.__dict__)
+    back_project(**args.__dict__)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
