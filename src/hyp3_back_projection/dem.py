@@ -5,6 +5,7 @@ from typing import Union, Tuple
 
 from osgeo import gdal
 from dem_stitcher import stitch_dem
+from hyp3_back_projection import utils
 
 gdal.UseExceptions()
 
@@ -54,5 +55,5 @@ def download_dem_for_back_projection(
     extent = get_coordinates(granule_info)
 
     write_demfile(extent, granule_path, dem_path)
-    exec(open(dem_script).read())
+    utils.call_stanford_module(dem_script)
     return
