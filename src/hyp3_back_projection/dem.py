@@ -1,11 +1,10 @@
 """Prepare a Copernicus GLO-30 DEM virtual raster (VRT) covering a given geometry"""
-import os
 from pathlib import Path
 from typing import Union, Tuple
 
-from osgeo import gdal
 from dem_stitcher import stitch_dem
 from hyp3_back_projection import utils
+from osgeo import gdal
 
 gdal.UseExceptions()
 
@@ -32,7 +31,7 @@ def get_coordinates(info: dict) -> Tuple[int, int, int, int]:
 def write_demfile(bounds, granule_path, dem_file: Union[str, Path]):
     dem_urls = stitch_dem.get_dem_tile_paths(bounds, granule_path.name)
     with dem_file.open('w') as f:
-        [f.write(f'{dem_url}\n') for dem_url in dem_urls]
+        [f.write(f'{dem_url.split['/'][:-1]}\n') for dem_url in dem_urls]
     return
 
 
