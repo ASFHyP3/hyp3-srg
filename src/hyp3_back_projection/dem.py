@@ -27,12 +27,13 @@ def get_coordinates(info: dict) -> Tuple[int, int, int, int]:
         # TODO: Add in a gdal warp or something to bring to EPSG4326
         print('Granule needs to be in EPSG')
 
-def write_demfile(bounds, dem_file: Union[str, Path]):
-    X, p = stitch_dem(bounds,
-                      dem_name='glo_30',  # Global Copernicus 30 meter resolution DEM
-                      dst_ellipsoidal_height=False,
-                      dst_area_or_point='Point')
-    p.
+
+def write_demfile(bounds, granule_path, dem_file: Union[str, Path]):
+    dem_urls = stitch_dem.get_dem_tile_paths(bounds, granule_path.name)
+    with dem_file.open('w') as f:
+        [f.write(f'{dem_url}\n') for dem_url in dem_urls]
+    return
+
 
 def download_dem_for_back_projection(
         granule_path: Union[Path, str],
@@ -52,6 +53,7 @@ def download_dem_for_back_projection(
     granule_info = gdal.Info(granule_path, format='json')
     extent = get_coordinates(granule_info)
 
-    write_demfile(extent, dem_path)
+    write_demfile(extent, granule_path, dem_path)
     exec(open(dem_script).read())
-    return dem_path
+
+    return
