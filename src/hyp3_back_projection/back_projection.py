@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from hyp3_back_projection import utils
+from hyp3_back_projection import utils, dem
 
 
 log = logging.getLogger(__name__)
@@ -41,6 +41,7 @@ def back_project(
     granule_path = utils.download_granule(granule, work_dir)
     orbit_path = utils.download_orbit(granule, work_dir)
     # Download DEM (likely using DEM/createDEMcop.py)
+    dem_path = dem.download_dem_for_back_projection(granule_path)
     # Alternatively, download DEM from ASF and format to look like the DEM from createDEMcop.py
     # call sentinel/sentinel_scene_cup.py via subprocess
     product_file = None
