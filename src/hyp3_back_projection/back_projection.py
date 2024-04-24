@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from hyp3_back_projection import utils, dem
+from hyp3_back_projection import dem, utils
 
 
 log = logging.getLogger(__name__)
