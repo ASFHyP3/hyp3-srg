@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Union, Tuple
 
 from dem_stitcher import stitch_dem
+
 from hyp3_back_projection import utils
 from osgeo import gdal
 
