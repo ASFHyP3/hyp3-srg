@@ -55,5 +55,4 @@ def download_dem_for_back_projection(
 
     write_demfile(extent, granule_path, dem_path)
     exec(open(dem_script).read())
-
     return
