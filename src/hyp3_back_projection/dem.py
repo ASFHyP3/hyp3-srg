@@ -2,7 +2,7 @@
 import logging
 from pathlib import Path
 
-import boto3
+import requests
 from shapely.geometry import Polygon
 
 from hyp3_back_projection import utils
@@ -15,12 +15,16 @@ def ensure_egm_model_available():
     """Ensure the EGM module is available.
     Currently using the EGM2004 model provided by Stanford, but hope to switch to a public source.
     """
+    url = 'https://ffwilliams2-shenanigans.s3.us-west-2.amazonaws.com/lavas/egm2008_geoid_grid'
+
     proc_home = utils.get_proc_home()
     egm_model_path = proc_home / 'DEM' / 'egm2008_geoid_grid'
-    if not egm_model_path.exists():
-        print('EGM2008 model not found. Downloading from S3.')
-        s3 = boto3.client('s3')
-        s3.download_file('ffwilliams2-shenanigans', 'lavas/egm2008_geoid_grid', egm_model_path)
+
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(egm_model_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
 
 
 def download_dem_for_back_projection(

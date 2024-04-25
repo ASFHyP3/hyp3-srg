@@ -35,6 +35,8 @@ def back_project(
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
     """
+    utils.set_creds('EARTHDATA', earthdata_username, earthdata_password)
+    utils.set_creds('ESA', esa_username, esa_password)
     if work_dir is None:
         work_dir = Path.cwd()
 
