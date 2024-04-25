@@ -22,7 +22,7 @@ ENV PYTHONDONTWRITEBYTECODE=true
 ENV PROC_HOME=/home/conda/back-projection
 ENV MYHOME=/home/conda
 
-RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl build-essential gfortran && \
+RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl build-essential gfortran libfftw3-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG CONDA_UID=1000
@@ -46,16 +46,6 @@ RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BAC
     tar -xvf ./back-projection.tar.gz -C ./back-projection/ --strip=1 && \
     rm ./back-projection.tar.gz && \
     rm -rf ./back-projection/fft
-
-RUN curl -sL https://fftw.org/pub/fftw/fftw-${FFTW_TAG}.tar.gz > ./fftw.tar.gz && \
-    mkdir -p ./back-projection/fft && \
-    tar -xvf ./fftw.tar.gz -C ./back-projection/fft/ && \
-    rm ./fftw.tar.gz
-
-RUN cd /home/conda/back-projection/fft/fftw-${FFTW_TAG} && \
-    ./configure --enable-float && \
-    make && \
-    cd /home/conda/
 
 COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc_cpu.sh ./back-projection
 RUN cd /home/conda/back-projection && \
