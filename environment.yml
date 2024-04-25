@@ -17,6 +17,5 @@ dependencies:
   - pytest-console-scripts
   - pytest-cov
   - asf_search
-  - dem_stitcher
   # For running
   - hyp3lib>=3,<4

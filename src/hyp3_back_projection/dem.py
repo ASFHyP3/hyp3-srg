@@ -5,7 +5,6 @@ from shapely.geometry import Polygon
 
 from hyp3_back_projection import utils
 
-
 def download_dem_for_back_projection(
     footprint: Polygon,
     output_dir: Path,
