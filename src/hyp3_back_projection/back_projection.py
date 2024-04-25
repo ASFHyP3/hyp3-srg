@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from hyp3_back_projection import utils
+from hyp3_back_projection import dem, utils
 
 
 log = logging.getLogger(__name__)
@@ -38,20 +38,19 @@ def back_project(
     if work_dir is None:
         work_dir = Path.cwd()
 
-    granule_path = utils.download_granule(granule, work_dir)
+    granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir)
     orbit_path = utils.download_orbit(granule, work_dir)
-    # Download DEM (likely using DEM/createDEMcop.py)
-    # Alternatively, download DEM from ASF and format to look like the DEM from createDEMcop.py
+    dem_path = dem.download_dem_for_back_projection(granule_bbox, work_dir)
     # call sentinel/sentinel_scene_cup.py via subprocess
-    product_file = None
-    return product_file
+    return granule_path, orbit_path, dem_path
 
 
 def main():
     """Back Projection entrypoint.
 
     Example command:
-        python -m ++process back_projection S1A_IW_RAW__0SDV_20240417T132540_20240417T132613_053474_067D0B_EA25
+        python -m hyp3_back_projection ++process back_projection \
+            S1A_IW_RAW__0SDV_20240101T020749_20240101T020822_051907_064575_F71B-RAW
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--earthdata-username', default=None, help="Username for NASA's EarthData")

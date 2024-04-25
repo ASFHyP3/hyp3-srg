@@ -1,17 +1,26 @@
 import logging
 import netrc
 import os
+import subprocess
 from pathlib import Path
 from platform import system
 from typing import List, Tuple
 
 import asf_search
 from hyp3lib.get_orb import downloadSentinelOrbitFile
+from shapely.geometry import shape
 
 
 log = logging.getLogger(__name__)
 ESA_HOST = 'dataspace.copernicus.eu'
 EARTHDATA_HOST = 'urs.earthdata.nasa.gov'
+
+
+def get_proc_home():
+    proc_home = os.environ.get('PROC_HOME', None)
+    if proc_home is None:
+        raise ValueError('PROC_HOME environment variable is not set. Location of Stanford modules is unknown.')
+    return Path(proc_home)
 
 
 def get_netrc():
@@ -71,8 +80,9 @@ def get_earthdata_credentials() -> Tuple[str, str]:
     )
 
 
-def download_granule(granule_name: str, output_dir: Path):
-    """Download a S1 granule using asf_search.
+def download_raw_granule(granule_name: str, output_dir: Path, buffer: float = 0.1):
+    """Download a S1 granule using asf_search. Return its path
+    and buffered extent.
 
     Args:
         granule_name: Name of the granule to download
@@ -80,10 +90,13 @@ def download_granule(granule_name: str, output_dir: Path):
     """
     username, password = get_earthdata_credentials()
     session = asf_search.ASFSession().auth_with_creds(username, password)
+    if not granule_name.endswith('-RAW'):
+        granule_name += '-RAW'
 
-    results = asf_search.granule_search([granule_name])
-    results.download(path=output_dir, session=session)
-    return output_dir / granule_name
+    result = asf_search.granule_search([granule_name])[0]
+    bbox = shape(result.geojson()['geometry']).buffer(buffer)
+    result.download(path=output_dir, session=session)
+    return output_dir / granule_name, bbox
 
 
 def download_orbit(granule_name: str, output_dir: Path):
@@ -105,9 +118,8 @@ def call_stanford_module(local_name, args: List = []):
         local_name: Name of the module to call (e.g. 'sentinel/sentinel_scene_cpu.py')
         args: List of arguments to pass to the module
     """
-    proc_home = os.environ.get('PROC_HOME', None)
-    if proc_home is None:
-        raise ValueError('PROC_HOME environment variable is not set. Location of Stanford modules is unknown.')
-    proc_home = Path(proc_home)
-    log.info(f'Calling {local_name} with arguments: {" ".join(args)}')
-    # TODO: Actually call the module via subprocess
+    proc_home = get_proc_home()
+    script = proc_home / local_name
+    args = [str(x) for x in args]
+    print(f'Calling {local_name} with arguments: {" ".join(args)}')
+    subprocess.run([script, *args], check=True)
