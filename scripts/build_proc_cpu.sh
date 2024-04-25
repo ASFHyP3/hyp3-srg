@@ -1,3 +1,9 @@
+#!/bin/bash
+
+MULTIARCH_DIR=/usr/lib/$(gcc -print-multiarch)
+FFTW_LIB=$MULTIARCH_DIR/libfftw3f.a
+echo 'using FFTW library:' $FFTW_LIB
+
 # Works
 cd DEM
 gfortran -o mosaicDEM mosaicDEM.f90
@@ -10,7 +16,7 @@ gfortran -o createslc createslc.f90
 gcc -c azimuth_compress_cpu.c -lm -fopenmp
 gcc -c filelen.c io.c sentinel_raw_process_cpu.c decode_line_memory.c -lm -fopenmp
 gfortran -c processsubcpu.f90 backprojectcpusub.f90 bounds.f90 orbitrangetime.f90 latlon.f90 intp_orbit.f90 radar_to_xyz.f90 unitvec.f90 tcnbasis.f90 curvature.f90 cross.f90 orbithermite.f sentineltimingsub.f90 getburststatevectors.f90 -ffixed-line-length-none -fopenmp
-gcc -o sentinel_raw_process_cpu sentinel_raw_process_cpu.o decode_line_memory.o processsubcpu.o backprojectcpusub.o azimuth_compress_cpu.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o /usr/lib/x86_64-linux-gnu/libfftw3f.a -lgfortran -lgomp -lm -lrt -lpthread
+gcc -o sentinel_raw_process_cpu sentinel_raw_process_cpu.o decode_line_memory.o processsubcpu.o backprojectcpusub.o azimuth_compress_cpu.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o $FFTW_LIB -lgfortran -lgomp -lm -lrt -lpthread
 echo 'built sentinel_raw_process_cpu'
 
 # nvcc -o howmanygpus howmanygpus.cu
@@ -42,7 +48,7 @@ gcc -c ../util/filelen.c
 
 echo 'compiled filelen'
 
-gfortran -o crossmul crossmul.f90 filelen.o /usr/lib/x86_64-linux-gnu/libfftw3f.a -fopenmp -lrt -lpthread
+gfortran -o crossmul crossmul.f90 filelen.o $FFTW_LIB -fopenmp -lrt -lpthread
 
 echo 'built crossmul'
 
@@ -57,7 +63,7 @@ echo 'built sbas in sbas directory'
 
 cd ..
 cd ps
-gfortran -o cosine_sim cosine_sim.f90 -fopenmp /usr/lib/x86_64-linux-gnu/libfftw3f.a
+gfortran -o cosine_sim cosine_sim.f90 -fopenmp $FFTW_LIB
 gfortran -o psinterp psinterp.f90 -fopenmp
 echo 'Built cosine_sim and psinterp in ps directory'
 
@@ -88,5 +94,5 @@ echo 'built raw_process components in sentinel'
 
 gfortran -c processsub.f90 backprojectgpusub.f90 bounds.f90 orbitrangetime.f90 latlon.f90 intp_orbit.f90 radar_to_xyz.f90 unitvec.f90 tcnbasis.f90 curvature.f90 cross.f90 orbithermite.f sentineltimingsub.f90 getburststatevectors.f90 -ffixed-line-length-none -fopenmp
 
-# nvcc -o sentinel_raw_process sentinel_raw_process.o decode_line_memory.o processsub.o backprojectgpusub.o azimuth_compress.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o /usr/lib/x86_64-linux-gnu/libfftw3f.a -lstdc++ -lgfortran -lgomp
+# nvcc -o sentinel_raw_process sentinel_raw_process.o decode_line_memory.o processsub.o backprojectgpusub.o azimuth_compress.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o $FFTW_LIB -lstdc++ -lgfortran -lgomp
 cd ..
