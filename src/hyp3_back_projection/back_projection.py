@@ -49,7 +49,7 @@ def main():
     """Back Projection entrypoint.
 
     Example command:
-        python -m ++process back_projection S1A_IW_RAW__0SDV_20240417T132540_20240417T132613_053474_067D0B_EA25
+        python -m hyp3_back_projection ++process back_projection S1A_IW_RAW__0SDV_20240101T020749_20240101T020822_051907_064575_F71B-RAW
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--earthdata-username', default=None, help="Username for NASA's EarthData")

@@ -121,5 +121,5 @@ def call_stanford_module(local_name, args: List = []):
     proc_home = get_proc_home()
     script = proc_home / local_name
     args = [str(x) for x in args]
-    log.info(f'Calling {local_name} with arguments: {" ".join(args)}')
+    print(f'Calling {local_name} with arguments: {" ".join(args)}')
     subprocess.run([script, *args], check=True)
