@@ -18,22 +18,14 @@ LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+ENV USEGPU="yes"
 ENV PYTHONDONTWRITEBYTECODE=true
 ENV PROC_HOME=/home/conda/back-projection
 ENV MYHOME=/home/conda
 
-RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl build-essential gfortran libfftw3-dev nvidia-driver-535 software-properties-common && \
+RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl build-essential gfortran libfftw3-dev nvidia-driver-535 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda-repo-debian12-12-4-local_12.4.1-550.54.15-1_amd64.deb && \
-    dpkg -i cuda-repo-debian12-12-4-local_12.4.1-550.54.15-1_amd64.deb && \
-    cp /var/cuda-repo-debian12-12-4-local/cuda-*-keyring.gpg /usr/share/keyrings/ && \
-    add-apt-repository contrib && \
-    apt-get update && \
-    apt-get -y install cuda-toolkit-12-4 && \
-    nvcc --version
-
-ARG USE_GPU=yes
 ARG CONDA_UID=1000
 ARG CONDA_GID=1000
 ARG BACK_PROJECTION_TAG=0.2.0
@@ -45,9 +37,19 @@ RUN groupadd -g "${CONDA_GID}" --system conda && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/conda/.profile && \
     echo "conda activate base" >> /home/conda/.profile
 
-USER ${CONDA_UID}
 SHELL ["/bin/bash", "-l", "-c"]
+
+COPY ./scripts/install_cuda.sh ./
+RUN chmod +x ./install_cuda.sh
+RUN if [[ $USEGPU == "yes" ]] ; then ./install_cuda.sh ; else echo "Skipping CUDA install..." ; fi
+
+USER ${CONDA_UID}
 WORKDIR /home/conda/
+
+RUN if [[ $USEGPU == "yes" ]] ; then \
+    echo "export PATH="/usr/local/cuda-12.4/bin:$PATH"" >> .bashrc && \
+    echo "export LD_LIBRARY_PATH="/usr/local/cuda-12.4/lib64:$LD_LIBRARY_PATH"" >> .bashrc \
+    ; else echo "Skipping exporting CUDA path." ; fi
 
 RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BACK_PROJECTION_TAG}.tar.gz > ./back-projection.tar.gz && \
     mkdir -p ./back-projection && \
@@ -55,12 +57,12 @@ RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BAC
     rm ./back-projection.tar.gz && \
     rm -rf ./back-projection/fft
 
-COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc_cpu.sh ./scripts/build_proc_gpu.sh ./back-projection
+COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc_cpu.sh ./back-projection
+COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc_gpu.sh ./back-projection
 RUN cd /home/conda/back-projection && \
     chmod +x ./build_proc_cpu.sh && \
     chmod +x ./build_proc_gpu.sh && \
-    ./build_proc_cpu.sh && \
-    if [[ $arg == "yes" ]] ; echo "Skipping GPU build..." ; ./build_proc_cpu.sh && \
+    if [[ $USEGPU == "yes" ]] ; then ./build_proc_cpu.sh ; else ./build_proc_cpu.sh ; fi && \
     cd /home/conda/
 
 COPY --chown=${CONDA_UID}:${CONDA_GID} . /hyp3-back-projection/
