@@ -79,11 +79,6 @@ cd ..
 
 echo 'built snaphu'
 
-# nvcc -o gpu_arch gpu_arch.cu
-# echo 'built gpu architecture probe'
-
-# ./gpu_arch | cat > GPU_ARCH; source ./GPU_ARCH; rm GPU_ARCH
-
 cd sentinel
 
 gcc -c filelen.c io.c sentinel_raw_process.c decode_line_memory.c -lm -fopenmp
