@@ -9,7 +9,3 @@ dpkg -i cuda-repo-ubuntu2004-12-4-local_12.4.1-550.54.15-1_amd64.deb && \
 cp /var/cuda-repo-ubuntu2004-12-4-local/cuda-*-keyring.gpg /usr/share/keyrings/ && \
 apt-get update && \
 apt-get -y install cuda-toolkit-12-4
-
-# Add Cuda Toolkit binaries to the Path.
-echo "export PATH="/usr/local/cuda-12.4/bin:$PATH"" >> .bashrc
-echo "export LD_LIBRARY_PATH="/usr/local/cuda-12.4/lib64:$LD_LIBRARY_PATH"" >> .bashrc
