@@ -18,7 +18,7 @@ LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ENV USEGPU="yes"
+ENV USEGPU="no"
 ENV PYTHONDONTWRITEBYTECODE=true
 ENV PROC_HOME=/home/conda/back-projection
 ENV MYHOME=/home/conda
