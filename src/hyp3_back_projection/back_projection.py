@@ -13,6 +13,19 @@ from hyp3_back_projection import dem, utils
 log = logging.getLogger(__name__)
 
 
+def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
+    """Create a parameter file for the processor.
+
+    Args:
+        dem_path: Path to the DEM file
+        dem_rsc_path: Path to the DEM RSC file
+        output_dir: Directory to save the parameter file in
+    """
+    lines = [str(dem_path), str(dem_rsc_path)]
+    with open(output_dir / 'params', 'w') as f:
+        f.write('\n'.join(lines))
+
+
 def back_project(
     granule: str,
     earthdata_username: str = None,
@@ -42,9 +55,21 @@ def back_project(
 
     granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir)
     orbit_path = utils.download_orbit(granule, work_dir)
-    dem.download_dem_for_back_projection(granule_bbox, work_dir)
+    dem_path = dem.download_dem_for_back_projection(granule_bbox, work_dir)
+    create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
     utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', [str(granule_path.with_suffix('')), str(orbit_path)])
-    return granule_path, orbit_path
+    # TODO: clean up files
+    # command = 'find . -name \*.hgt\* -delete'
+    # ret=os.system(command)
+    # command = 'find . -name dem\* -delete'
+    # ret=os.system(command)
+    # command = 'find . -name DEM\* -delete'
+    # ret=os.system(command)
+    # command = 'find . -name q\* -delete'
+    # ret=os.system(command)
+    # command = 'find . -name positionburst\* -delete'
+    # ret=os.system(command)
+    # TODO: merge slcs
 
 
 def main():
