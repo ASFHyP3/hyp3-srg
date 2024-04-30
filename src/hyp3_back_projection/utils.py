@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 from platform import system
 from typing import List, Tuple
+from zipfile import ZipFile
 
 import asf_search
 from hyp3lib.get_orb import downloadSentinelOrbitFile
@@ -113,7 +114,12 @@ def download_raw_granule(granule_name: str, output_dir: Path, buffer: float = 0.
     result = asf_search.granule_search([granule_name])[0]
     bbox = shape(result.geojson()['geometry']).buffer(buffer)
     result.download(path=output_dir, session=session)
-    return output_dir / granule_name, bbox
+    zip_path = output_dir / f'{granule_name[:-4]}.zip'
+    out_path = output_dir / f'{granule_name[:-4]}.SAFE'
+    if not out_path.exists():
+        with ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall('.')
+    return out_path, bbox
 
 
 def download_orbit(granule_name: str, output_dir: Path):

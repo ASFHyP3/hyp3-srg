@@ -42,9 +42,9 @@ def back_project(
 
     granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir)
     orbit_path = utils.download_orbit(granule, work_dir)
-    dem_path = dem.download_dem_for_back_projection(granule_bbox, work_dir)
-    # call sentinel/sentinel_scene_cup.py via subprocess
-    return granule_path, orbit_path, dem_path
+    dem.download_dem_for_back_projection(granule_bbox, work_dir)
+    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', [str(granule_path.with_suffix('')), str(orbit_path)])
+    return granule_path, orbit_path
 
 
 def main():
