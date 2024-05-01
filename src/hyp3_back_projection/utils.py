@@ -98,7 +98,7 @@ def get_earthdata_credentials() -> Tuple[str, str]:
     )
 
 
-def download_raw_granule(granule_name: str, output_dir: Path, buffer: float = 0.1):
+def download_raw_granule(granule_name: str, output_dir: Path):
     """Download a S1 granule using asf_search. Return its path
     and buffered extent.
 
@@ -112,13 +112,21 @@ def download_raw_granule(granule_name: str, output_dir: Path, buffer: float = 0.
         granule_name += '-RAW'
 
     result = asf_search.granule_search([granule_name])[0]
-    bbox = shape(result.geojson()['geometry']).buffer(buffer)
-    result.download(path=output_dir, session=session)
+    bbox = shape(result.geojson()['geometry'])
+
     zip_path = output_dir / f'{granule_name[:-4]}.zip'
     out_path = output_dir / f'{granule_name[:-4]}.SAFE'
+
+    if not out_path.exists() and not zip_path.exists():
+        result.download(path=output_dir, session=session)
+
     if not out_path.exists():
         with ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall('.')
+
+    if zip_path.exists():
+        zip_path.unlink()
+
     return out_path, bbox
 
 

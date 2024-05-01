@@ -5,7 +5,9 @@ back-projection processing
 import argparse
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
+
+from shapely import unary_union
 
 from hyp3_back_projection import dem, utils
 
@@ -26,8 +28,15 @@ def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
         f.write('\n'.join(lines))
 
 
+def back_project_single_granule(granule_path: Path, orbit_path: Path):
+    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', [str(granule_path.with_suffix('')), str(orbit_path)])
+    patterns = ['*.hgt*', 'dem*', 'DEM*', 'q*', 'positionburst*']
+    for pattern in patterns:
+        [f.unlink() for f in Path.cwd().glob(pattern)]
+
+
 def back_project(
-    granule: str,
+    granules: Iterable[str],
     earthdata_username: str = None,
     earthdata_password: str = None,
     esa_username: str = None,
@@ -36,10 +45,10 @@ def back_project(
     bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
 ) -> Path:
-    """Back-project a Sentinel-1 level-0 granule.
+    """Back-project a set of Sentinel-1 level-0 granules.
 
     Args:
-        granule: Sentinel-1 level-0 granule to back-project
+        granules: List of Sentinel-1 level-0 granules to back-project
         earthdata_username: Username for NASA's EarthData service
         earthdata_password: Password for NASA's EarthData service
         esa_username: Username for ESA's Copernicus Data Space Ecosystem
@@ -53,31 +62,31 @@ def back_project(
     if work_dir is None:
         work_dir = Path.cwd()
 
-    granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir)
-    orbit_path = utils.download_orbit(granule, work_dir)
-    dem_path = dem.download_dem_for_back_projection(granule_bbox, work_dir)
+    bboxs = []
+    back_project_args = []
+    for granule in granules:
+        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir)
+        orbit_path = utils.download_orbit(granule, work_dir)
+        bboxs.append(granule_bbox)
+        back_project_args.append((granule_path, orbit_path))
+
+    full_bbox = unary_union(bboxs).buffer(0.1)
+    dem_path = dem.download_dem_for_back_projection(full_bbox, work_dir)
     create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
-    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', [str(granule_path.with_suffix('')), str(orbit_path)])
-    # TODO: clean up files
-    # command = 'find . -name \*.hgt\* -delete'
-    # ret=os.system(command)
-    # command = 'find . -name dem\* -delete'
-    # ret=os.system(command)
-    # command = 'find . -name DEM\* -delete'
-    # ret=os.system(command)
-    # command = 'find . -name q\* -delete'
-    # ret=os.system(command)
-    # command = 'find . -name positionburst\* -delete'
-    # ret=os.system(command)
-    # TODO: merge slcs
+
+    for granule_path, orbit_path in back_project_args:
+        back_project_single_granule(granule_path, orbit_path)
+
+    utils.call_stanford_module('util/merge_slcs.py')
 
 
 def main():
     """Back Projection entrypoint.
 
     Example command:
-        python -m hyp3_back_projection ++process back_projection \
-            S1A_IW_RAW__0SDV_20240101T020749_20240101T020822_051907_064575_F71B-RAW
+    python -m hyp3_back_projection ++process back_projection \
+        S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42-RAW \
+        S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--earthdata-username', default=None, help="Username for NASA's EarthData")
@@ -86,8 +95,7 @@ def main():
     parser.add_argument('--esa-password', default=None, help="Password for ESA's Copernicus Data Space Ecosystem")
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
-    # TODO: will eventually need to add to support multiple granules
-    parser.add_argument('granule', help='Level-0 S1 granule to back-project.')
+    parser.add_argument('granules', nargs='+', help='Level-0 S1 granule to back-project.')
     args = parser.parse_args()
 
     back_project(**args.__dict__)
