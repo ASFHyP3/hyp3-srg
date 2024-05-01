@@ -22,7 +22,7 @@ ENV PYTHONDONTWRITEBYTECODE=true
 ENV PROC_HOME=/home/conda/back-projection
 ENV MYHOME=/home/conda
 
-RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl build-essential gfortran libgfortran3 libfftw3-dev && \
+RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl build-essential gfortran libfftw3-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ARG CONDA_UID=1000
