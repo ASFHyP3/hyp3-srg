@@ -35,6 +35,7 @@ def download_dem_for_back_projection(
 
     Args:
         footprint: The footprint to download a DEM for.
+        output_dir: The directory to save the DEM in.
 
     Returns:
         The path to the downloaded DEM.

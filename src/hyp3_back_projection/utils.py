@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 import asf_search
 from hyp3lib.get_orb import downloadSentinelOrbitFile
-from shapely.geometry import shape
+from shapely.geometry import Polygon, shape
 
 
 log = logging.getLogger(__name__)
@@ -17,20 +17,30 @@ ESA_HOST = 'dataspace.copernicus.eu'
 EARTHDATA_HOST = 'urs.earthdata.nasa.gov'
 
 
-def get_proc_home():
+def get_proc_home() -> Path:
+    """Get the PROC_HOME environment variable, which is the location of the SRG modules.
+
+    Returns:
+        Path to the PROC_HOME directory
+    """
     proc_home = os.environ.get('PROC_HOME', None)
     if proc_home is None:
         raise ValueError('PROC_HOME environment variable is not set. Location of Stanford modules is unknown.')
     return Path(proc_home)
 
 
-def get_netrc():
+def get_netrc() -> Path:
+    """Get the location of the netrc file.
+
+    Returns:
+        Path to the netrc file
+    """
     netrc_name = '_netrc' if system().lower() == 'windows' else '.netrc'
     netrc_file = Path.home() / netrc_name
     return netrc_file
 
 
-def set_creds(service, username, password):
+def set_creds(service, username, password) -> None:
     """Set username/password environmental variables for a service.
     username/password are set using the following format:
     SERVICE_USERNAME, SERVICE_PASSWORD
@@ -47,7 +57,16 @@ def set_creds(service, username, password):
         os.environ[f'{service.upper()}_PASSWORD'] = password
 
 
-def find_creds_in_env(username_name, password_name):
+def find_creds_in_env(username_name, password_name) -> Tuple[str, str]:
+    """Find credentials for a service in the environment.
+
+    Args:
+        username_name: Name of the environment variable for the username
+        password_name: Name of the environment variable for the password
+
+    Returns:
+        Tuple of the username and password found in the environment
+    """
     if username_name in os.environ and password_name in os.environ:
         username = os.environ[username_name]
         password = os.environ[password_name]
@@ -56,19 +75,32 @@ def find_creds_in_env(username_name, password_name):
     return None, None
 
 
-def find_creds_in_netrc(host):
+def find_creds_in_netrc(service) -> Tuple[str, str]:
+    """Find credentials for a service in the netrc file.
+
+    Args:
+        service: Service to find credentials for
+
+    Returns:
+        Tuple of the username and password found in the netrc file
+    """
     netrc_file = get_netrc()
     if netrc_file.exists():
         netrc_credentials = netrc.netrc(netrc_file)
-        if host in netrc_credentials.hosts:
-            username = netrc_credentials.hosts[host][0]
-            password = netrc_credentials.hosts[host][2]
+        if service in netrc_credentials.hosts:
+            username = netrc_credentials.hosts[service][0]
+            password = netrc_credentials.hosts[service][2]
             return username, password
 
     return None, None
 
 
 def get_esa_credentials() -> Tuple[str, str]:
+    """Get ESA credentials from the environment or netrc file.
+
+    Returns:
+        Tuple of the ESA username and password
+    """
     username, password = find_creds_in_env('ESA_USERNAME', 'ESA_PASSWORD')
     if username and password:
         return username, password
@@ -84,6 +116,11 @@ def get_esa_credentials() -> Tuple[str, str]:
 
 
 def get_earthdata_credentials() -> Tuple[str, str]:
+    """Get NASA EarthData credentials from the environment or netrc file.
+
+    Returns:
+        Tuple of the NASA EarthData username and password
+    """
     username, password = find_creds_in_env('EARTHDATA_USERNAME', 'EARTHDATA_PASSWORD')
     if username and password:
         return username, password
@@ -98,13 +135,16 @@ def get_earthdata_credentials() -> Tuple[str, str]:
     )
 
 
-def download_raw_granule(granule_name: str, output_dir: Path):
+def download_raw_granule(granule_name: str, output_dir: Path) -> Tuple[Path, Polygon]:
     """Download a S1 granule using asf_search. Return its path
     and buffered extent.
 
     Args:
         granule_name: Name of the granule to download
         output_dir: Directory to save the granule in
+
+    Returns:
+        Tuple of the granule path and its extent as a Polygon
     """
     username, password = get_earthdata_credentials()
     session = asf_search.ASFSession().auth_with_creds(username, password)
@@ -130,13 +170,16 @@ def download_raw_granule(granule_name: str, output_dir: Path):
     return out_path, bbox
 
 
-def download_orbit(granule_name: str, output_dir: Path):
+def download_orbit(granule_name: str, output_dir: Path) -> Path:
     """Download a S1 orbit file. Prefer using the ESA API,
     but fallback to ASF if needed.
 
     Args:
         granule_name: Name of the granule to download
         output_dir: Directory to save the orbit file in
+
+    Returns:
+        Path to the downloaded orbit file
     """
     orbit_path, _ = downloadSentinelOrbitFile(granule_name, str(output_dir), esa_credentials=get_esa_credentials())
     return orbit_path
