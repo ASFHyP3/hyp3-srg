@@ -11,6 +11,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 * Compilation of the `back-processing` code to the Dockerfile.
+* CPU-based workflow for back-projecting level-0 Sentinel-1 data
 
 ### Changed
 * Compilation script now uses libfftw3f library installed using `apt` instead of locally compiled version.
