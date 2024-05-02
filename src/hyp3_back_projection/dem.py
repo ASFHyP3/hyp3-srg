@@ -40,8 +40,8 @@ def download_dem_for_back_projection(
     Returns:
         The path to the downloaded DEM.
     """
-    dem_path = output_dir / 'elevation.dem'
-    dem_rsc = output_dir / 'elevation.dem.rsc'
+    dem_path = str(output_dir / 'elevation.dem')
+    dem_rsc = str(output_dir / 'elevation.dem.rsc')
 
     ensure_egm_model_available()
 
