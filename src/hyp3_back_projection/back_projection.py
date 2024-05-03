@@ -74,6 +74,7 @@ def back_project(
     if work_dir is None:
         work_dir = Path.cwd()
 
+    print('Downloading data...')
     bboxs = []
     back_project_args = []
     for granule in granules:
@@ -87,9 +88,10 @@ def back_project(
     create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
     for granule_path, orbit_path in back_project_args:
-        back_project_single_granule(granule_path, orbit_path)
+        back_project_single_granule(granule_path, orbit_path, work_dir=work_dir)
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
+    print('Done!')
 
 
 def main():
