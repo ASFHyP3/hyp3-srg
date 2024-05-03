@@ -37,14 +37,14 @@ def back_project_single_granule(granule_path: Path, orbit_path: Path, work_dir: 
     """
     required_files = ['elevation.dem', 'elevation.dem.rsc', 'params']
     for file in required_files:
-        if not (granule_path / file).exists():
+        if not (work_dir / file).exists():
             raise FileNotFoundError(f'Missing required file: {file}')
 
     args = [str(granule_path.with_suffix('')), str(orbit_path)]
-    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', args, work_dir)
-    patterns = ['*.hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
+    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', args, work_dir=work_dir)
+    patterns = ['*hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
     for pattern in patterns:
-        [f.unlink() for f in Path.cwd().glob(pattern)]
+        [f.unlink() for f in work_dir.glob(pattern)]
 
 
 def back_project(
