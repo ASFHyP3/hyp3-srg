@@ -40,13 +40,13 @@ def download_dem_for_back_projection(
     Returns:
         The path to the downloaded DEM
     """
-    dem_path = str(work_dir / 'elevation.dem')
-    dem_rsc = str(work_dir / 'elevation.dem.rsc')
+    dem_path = work_dir / 'elevation.dem'
+    dem_rsc = work_dir / 'elevation.dem.rsc'
 
     ensure_egm_model_available()
 
     # bounds produces min x, min y, max x, max y; stanford wants toplat, botlat, leftlon, rightlon
     stanford_bounds = [footprint.bounds[i] for i in [3, 1, 0, 2]]
-    args = [dem_path, dem_rsc, *stanford_bounds]
+    args = [str(dem_path), str(dem_rsc), *stanford_bounds]
     utils.call_stanford_module('DEM/createDEMcop.py', args, work_dir=work_dir)
     return dem_path
