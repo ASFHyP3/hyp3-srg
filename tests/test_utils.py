@@ -69,4 +69,4 @@ def test_call_stanford_module(monkeypatch):
         m.setattr(subprocess, 'run', mock_run)
         m.setenv('PROC_HOME', '.')
         utils.call_stanford_module('foo/bar.py', ['arg1', 'arg2'])
-        mock_run.assert_called_once_with([Path('foo/bar.py'), 'arg1', 'arg2'], check=True)
+        mock_run.assert_called_once_with([Path('foo/bar.py'), 'arg1', 'arg2'], cwd=Path.cwd(), check=True)

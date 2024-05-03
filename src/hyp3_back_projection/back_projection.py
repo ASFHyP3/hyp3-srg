@@ -28,7 +28,7 @@ def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
         f.write('\n'.join(lines))
 
 
-def back_project_single_granule(granule_path: Path, orbit_path: Path):
+def back_project_single_granule(granule_path: Path, orbit_path: Path, work_dir: Path) -> None:
     """Back-project a single Sentinel-1 level-0 granule.
 
     Args:
@@ -40,7 +40,8 @@ def back_project_single_granule(granule_path: Path, orbit_path: Path):
         if not (granule_path / file).exists():
             raise FileNotFoundError(f'Missing required file: {file}')
 
-    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', [str(granule_path.with_suffix('')), str(orbit_path)])
+    args = [str(granule_path.with_suffix('')), str(orbit_path)]
+    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', args, work_dir)
     patterns = ['*.hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
     for pattern in patterns:
         [f.unlink() for f in Path.cwd().glob(pattern)]
@@ -88,7 +89,7 @@ def back_project(
     for granule_path, orbit_path in back_project_args:
         back_project_single_granule(granule_path, orbit_path)
 
-    utils.call_stanford_module('util/merge_slcs.py')
+    utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
 
 def main():

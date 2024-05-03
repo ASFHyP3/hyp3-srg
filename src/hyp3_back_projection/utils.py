@@ -4,7 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 from platform import system
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from zipfile import ZipFile
 
 import asf_search
@@ -185,15 +185,19 @@ def download_orbit(granule_name: str, output_dir: Path) -> Path:
     return orbit_path
 
 
-def call_stanford_module(local_name, args: List = []):
+def call_stanford_module(local_name, args: List = [], work_dir: Optional[Path] = None) -> None:
     """Call a Stanford Processor modules (via subprocess) with the given arguments.
 
     Args:
         local_name: Name of the module to call (e.g. 'sentinel/sentinel_scene_cpu.py')
+        work_dir: Directory to run the module in
         args: List of arguments to pass to the module
     """
+    if work_dir is None:
+        work_dir = Path.cwd()
+
     proc_home = get_proc_home()
     script = proc_home / local_name
     args = [str(x) for x in args]
-    print(f'Calling {local_name} with arguments: {" ".join(args)}')
-    subprocess.run([script, *args], check=True)
+    print(f'Calling {local_name} {" ".join(args)} in directory {work_dir}')
+    subprocess.run([script, *args], cwd=work_dir, check=True)

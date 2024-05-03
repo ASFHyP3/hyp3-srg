@@ -29,24 +29,24 @@ def ensure_egm_model_available():
 
 def download_dem_for_back_projection(
     footprint: Polygon,
-    output_dir: Path,
+    work_dir: Path,
 ) -> Path:
     """Download the given DEM for the given extent.
 
     Args:
-        footprint: The footprint to download a DEM for.
-        output_dir: The directory to save the DEM in.
+        footprint: The footprint to download a DEM for
+        work_dir: The directory to save create the DEM in
 
     Returns:
-        The path to the downloaded DEM.
+        The path to the downloaded DEM
     """
-    dem_path = str(output_dir / 'elevation.dem')
-    dem_rsc = str(output_dir / 'elevation.dem.rsc')
+    dem_path = str(work_dir / 'elevation.dem')
+    dem_rsc = str(work_dir / 'elevation.dem.rsc')
 
     ensure_egm_model_available()
 
     # bounds produces min x, min y, max x, max y; stanford wants toplat, botlat, leftlon, rightlon
     stanford_bounds = [footprint.bounds[i] for i in [3, 1, 0, 2]]
     args = [dem_path, dem_rsc, *stanford_bounds]
-    utils.call_stanford_module('DEM/createDEMcop.py', args)
+    utils.call_stanford_module('DEM/createDEMcop.py', args, work_dir=work_dir)
     return dem_path
