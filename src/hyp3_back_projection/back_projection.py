@@ -92,7 +92,7 @@ def back_project(
         back_project_single_granule(granule_path, orbit_path, work_dir=work_dir)
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
-    
+
     if bucket:
         gslc_path = list(work_dir.glob('S1*.geo'))[0]
         upload_file_to_s3(gslc_path, bucket, bucket_prefix)
