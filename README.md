@@ -41,8 +41,13 @@ docker run -it --rm \
 ## Earthdata Login and ESA Credentials
 
 For all workflows, the user must provide their Earthdata Login credentials and ESA Copernicus Data Space Ecosystem (CDSE) credentials in order to download input data.
+
 If you do not already have an Earthdata account, you can sign up [here](https://urs.earthdata.nasa.gov/home).
+
 If you do not already have a CDSE account, you can sign up [here](https://dataspace.copernicus.eu).
+
 Your credentials can be passed to the workflows via command-line options (`--esa-username` and  `--esa-password`), environment variables
-(`EARTHDATA_USERNAME`, `EARTHDATA_PASSWORD`, `ESA_USERNAME`, and `ESA_PASSWORD`), or via your `.netrc` file. If you haven't set up a `.netrc` file
+(`EARTHDATA_USERNAME`, `EARTHDATA_PASSWORD`, `ESA_USERNAME`, and `ESA_PASSWORD`), or via your `.netrc` file.
+
+If you haven't set up a `.netrc` file
 before, check out this [guide](https://harmony.earthdata.nasa.gov/docs#getting-started) to get started.
