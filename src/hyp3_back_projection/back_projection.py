@@ -4,6 +4,7 @@ back-projection processing
 
 import argparse
 import logging
+import zipfile
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -46,6 +47,36 @@ def back_project_single_granule(granule_path: Path, orbit_path: Path, work_dir: 
     patterns = ['*hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
     for pattern in patterns:
         [f.unlink() for f in work_dir.glob(pattern)]
+
+
+def create_product(work_dir):
+    """Create a product zip file.
+    Includes files needed for further processing (gslc, orbit, and parameter file).
+
+    Args:
+        work_dir: Working directory for completed back-projection run
+
+    Returns:
+        Path to the created zip file
+    """
+    gslc_path = list(work_dir.glob('S1*.geo'))[0]
+    product_name = gslc_path.with_suffix('').name
+    orbit_path = work_dir / f'{product_name}.orbtiming'
+    zip_path = work_dir / f'{product_name}.zip'
+
+    parameter_file = work_dir / f'{product_name}.txt'
+    input_granules = [x.with_suffix('').name for x in work_dir.glob('S1*.SAFE')]
+    with open(parameter_file, 'w') as f:
+        f.write('Process: back-projection\n')
+        f.write(f"Input Granules: {', '.join(input_granules)}\n")
+    
+    # We don't compress the data because SLC data is psuedo-random
+    with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_STORED) as z:
+        z.write(gslc_path, gslc_path.name)
+        z.write(orbit_path, orbit_path.name)
+        z.write(parameter_file, parameter_file.name)
+
+    return zip_path
 
 
 def back_project(
@@ -94,8 +125,8 @@ def back_project(
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
     if bucket:
-        gslc_path = list(work_dir.glob('S1*.geo'))[0]
-        upload_file_to_s3(gslc_path, bucket, bucket_prefix)
+        zip_path = create_product(work_dir)
+        upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
     print('Done!')
 
