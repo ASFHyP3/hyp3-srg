@@ -51,6 +51,7 @@ COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc_cpu.sh ./back-projec
 RUN cd /home/conda/back-projection && \
     chmod +x ./build_proc_cpu.sh && \
     ./build_proc_cpu.sh && \
+    find $PROC_HOME -type f -name "*.py" -exec chmod +x {} + && \
     cd /home/conda/
 
 COPY --chown=${CONDA_UID}:${CONDA_GID} . /hyp3-back-projection/
