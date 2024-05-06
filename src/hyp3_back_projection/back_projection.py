@@ -69,7 +69,7 @@ def create_product(work_dir):
     with open(parameter_file, 'w') as f:
         f.write('Process: back-projection\n')
         f.write(f"Input Granules: {', '.join(input_granules)}\n")
-    
+
     # We don't compress the data because SLC data is psuedo-random
     with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_STORED) as z:
         z.write(gslc_path, gslc_path.name)
@@ -128,7 +128,7 @@ def back_project(
         zip_path = create_product(work_dir)
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
-    print('Done!')
+    print(f'Finish back-projection for {list(work_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
 
 
 def main():
