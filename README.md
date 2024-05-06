@@ -8,7 +8,7 @@ HyP3 plugin for back-projection processing
 
 The HyP3-back-projection plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/back-projection). The workflows currently included in this plugin are:
 
-back_projection: A workflow for creating geocoded Sentinel-1 SLCs from Level-0 data using a [back-projection methodology](https://doi.org/10.1109/LGRS.2017.2753580).
+`back_projection`: A workflow for creating geocoded Sentinel-1 SLCs from Level-0 data using a [back-projection methodology](https://doi.org/10.1109/LGRS.2017.2753580).
 
 To run a workflow, you'll first need to build the docker container:
 ```bash
@@ -35,7 +35,7 @@ docker run -it --rm \
     back-projection:latest \
     ++process back_projection \
     S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42-RAW \
-	S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
+    S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
 ```
 
 ## Earthdata Login and ESA Credentials
