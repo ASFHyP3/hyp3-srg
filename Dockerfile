@@ -63,6 +63,8 @@ RUN cd /home/conda/back-projection && \
     chmod +x ./build_proc_cpu.sh && \
     chmod +x ./build_proc_gpu.sh && \
     if [[ $USEGPU == "yes" ]] ; then ./build_proc_cpu.sh ; else ./build_proc_cpu.sh ; fi && \
+    ./build_proc_cpu.sh && \
+    find $PROC_HOME -type f -name "*.py" -exec chmod +x {} + && \
     cd /home/conda/
 
 COPY --chown=${CONDA_UID}:${CONDA_GID} . /hyp3-back-projection/

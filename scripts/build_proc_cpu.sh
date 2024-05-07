@@ -30,6 +30,7 @@ gcc -c io.c
 gfortran -o nbymi2 nbymi2.f io.o
 gfortran -c lsq.f90
 gfortran -o regressheight regressheight.f90 lsq.o
+gfortran -o mergeslcs mergeslcs.f90
 
 echo 'finished with util directory'
 
