@@ -1,44 +1,29 @@
 """
-back-projection processing for HyP3
+Standford processor plugin for HyP3
 """
-import logging
-from argparse import ArgumentParser
-
-from hyp3lib.aws import upload_file_to_s3
-from hyp3lib.image import create_thumbnail
-
-
-from hyp3_back_projection.process import process_back_projection
+import argparse
+import sys
+from importlib.metadata import entry_points
 
 
 def main():
+    """Main entrypoint for HyP3 processing
+
+    Calls the HyP3 entrypoint specified by the `++process` argument
     """
-    HyP3 entrypoint for hyp3_back_projection
-    """
-    parser = ArgumentParser()
-    parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
-    parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
-
-    # TODO: Your arguments here
-    parser.add_argument('--greeting', default='Hello world!',
-                        help='Write this greeting to a product file')
-
-    args = parser.parse_args()
-
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
-
-    product_file = process_back_projection(
-        greeting=args.greeting,
+    parser = argparse.ArgumentParser(prefix_chars='+', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        '++process',
+        choices=['back_projection'],
+        default='back_projection',
+        help='Select the HyP3 entrypoint to use',  # HyP3 entrypoints are specified in `pyproject.toml`
     )
 
-    if args.bucket:
-        upload_file_to_s3(product_file, args.bucket, args.bucket_prefix)
-        browse_images = product_file.with_suffix('.png')
-        for browse in browse_images:
-            thumbnail = create_thumbnail(browse)
-            upload_file_to_s3(browse, args.bucket, args.bucket_prefix)
-            upload_file_to_s3(thumbnail, args.bucket, args.bucket_prefix)
+    args, unknowns = parser.parse_known_args()
+    process_entry_point = list(entry_points(group='hyp3', name=args.process))[0]
+
+    sys.argv = [args.process, *unknowns]
+    sys.exit(process_entry_point.load()())
 
 
 if __name__ == '__main__':
