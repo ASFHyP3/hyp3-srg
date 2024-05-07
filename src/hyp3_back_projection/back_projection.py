@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 from hyp3lib.aws import upload_file_to_s3
+from hyp3lib.util import string_is_true
 from shapely import unary_union
 
 from hyp3_back_projection import dem, utils
@@ -30,26 +31,29 @@ def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
         f.write('\n'.join(lines))
 
 
-def back_project_single_granule(granule_path: Path, orbit_path: Path, work_dir: Path) -> None:
+def back_project_single_granule(granule_path: Path, orbit_path: Path, work_dir: Path, gpu: bool = False) -> None:
     """Back-project a single Sentinel-1 level-0 granule.
 
     Args:
         granule_path: Path to the granule to back-project
         orbit_path: Path to the orbit file for the granule
+        work_dir: Working directory for processing
+        gpu: Use the GPU-based version of the workflow, defaults to False
     """
     required_files = ['elevation.dem', 'elevation.dem.rsc', 'params']
     for file in required_files:
         if not (work_dir / file).exists():
             raise FileNotFoundError(f'Missing required file: {file}')
 
+    script = 'sentinel/sentinel_scene_gpu.py' if gpu else 'sentinel/sentinel_scene_cpu.py'
     args = [str(granule_path.with_suffix('')), str(orbit_path)]
-    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', args, work_dir=work_dir)
+    utils.call_stanford_module(script, args, work_dir=work_dir)
     patterns = ['*hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
     for pattern in patterns:
         [f.unlink() for f in work_dir.glob(pattern)]
 
 
-def create_product(work_dir):
+def create_product(work_dir) -> Path:
     """Create a product zip file.
     Includes files needed for further processing (gslc, orbit, and parameter file).
 
@@ -88,7 +92,8 @@ def back_project(
     bucket: str = None,
     bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
-) -> Path:
+    gpu: bool = False,
+):
     """Back-project a set of Sentinel-1 level-0 granules.
 
     Args:
@@ -100,6 +105,7 @@ def back_project(
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
+        gpu: Use the GPU-based version of the workflow
     """
     utils.set_creds('EARTHDATA', earthdata_username, earthdata_password)
     utils.set_creds('ESA', esa_username, esa_password)
@@ -120,7 +126,7 @@ def back_project(
     create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
     for granule_path, orbit_path in back_project_args:
-        back_project_single_granule(granule_path, orbit_path, work_dir=work_dir)
+        back_project_single_granule(granule_path, orbit_path, work_dir=work_dir, gpu=gpu)
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
@@ -146,6 +152,7 @@ def main():
     parser.add_argument('--esa-password', default=None, help="Password for ESA's Copernicus Data Space Ecosystem")
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
+    parser.add_argument('--gpu', type=string_is_true, default=False, help='Use the GPU-based version of the workflow.')
     parser.add_argument('granules', nargs='+', help='Level-0 S1 granule to back-project.')
     args = parser.parse_args()
 

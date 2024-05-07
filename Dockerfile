@@ -18,7 +18,9 @@ LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ENV USEGPU="no"
+ARG USEGPU="false"
+ENV USEGPU=${USEGPU}
+
 ENV PYTHONDONTWRITEBYTECODE=true
 ENV PROC_HOME=/home/conda/back-projection
 ENV MYHOME=/home/conda
@@ -46,7 +48,7 @@ RUN if [[ $USEGPU == "yes" ]] ; then ./install_cuda.sh ; else echo "Skipping CUD
 USER ${CONDA_UID}
 WORKDIR /home/conda/
 
-RUN if [[ $USEGPU == "yes" ]] ; then \
+RUN if [[ $USEGPU == "true" ]] ; then \
     echo "export PATH="/usr/local/cuda-12.4/bin:$PATH"" >> .bashrc && \
     echo "export LD_LIBRARY_PATH="/usr/local/cuda-12.4/lib64:$LD_LIBRARY_PATH"" >> .bashrc \
     ; else echo "Skipping exporting CUDA path." ; fi
@@ -57,13 +59,10 @@ RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BAC
     rm ./back-projection.tar.gz && \
     rm -rf ./back-projection/fft
 
-COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc_cpu.sh ./back-projection
-COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc_gpu.sh ./back-projection
+COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc.sh ./back-projection
 RUN cd /home/conda/back-projection && \
-    chmod +x ./build_proc_cpu.sh && \
-    chmod +x ./build_proc_gpu.sh && \
-    if [[ $USEGPU == "yes" ]] ; then ./build_proc_cpu.sh ; else ./build_proc_cpu.sh ; fi && \
-    ./build_proc_cpu.sh && \
+    chmod +x ./build_proc.sh && \
+    ./build_proc.sh && \
     find $PROC_HOME -type f -name "*.py" -exec chmod +x {} + && \
     cd /home/conda/
 
