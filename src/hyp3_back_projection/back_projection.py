@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Iterable, Optional
 
 from hyp3lib.aws import upload_file_to_s3
-from hyp3lib.util import string_is_true
 from shapely import unary_union
 
 from hyp3_back_projection import dem, utils
@@ -152,7 +151,7 @@ def main():
     parser.add_argument('--esa-password', default=None, help="Password for ESA's Copernicus Data Space Ecosystem")
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
-    parser.add_argument('--gpu', type=string_is_true, default=False, help='Use the GPU-based version of the workflow.')
+    parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
     parser.add_argument('granules', nargs='+', help='Level-0 S1 granule to back-project.')
     args = parser.parse_args()
 
