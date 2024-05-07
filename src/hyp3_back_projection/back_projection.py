@@ -45,7 +45,7 @@ def back_project_single_granule(granule_path: Path, orbit_path: Path, work_dir: 
         if not (work_dir / file).exists():
             raise FileNotFoundError(f'Missing required file: {file}')
 
-    script = 'sentinel/sentinel_scene_gpu.py' if gpu else 'sentinel/sentinel_scene_cpu.py'
+    script = 'sentinel/sentinel_scene_multigpu.py' if gpu else 'sentinel/sentinel_scene_cpu.py'
     args = [str(granule_path.with_suffix('')), str(orbit_path)]
     utils.call_stanford_module(script, args, work_dir=work_dir)
     patterns = ['*hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
