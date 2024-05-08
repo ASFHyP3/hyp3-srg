@@ -48,10 +48,8 @@ RUN if [[ $USEGPU == "true" ]] ; then ./install_cuda.sh ; else echo "Skipping CU
 USER ${CONDA_UID}
 WORKDIR /home/conda/
 
-RUN if [[ $USEGPU == "true" ]] ; then \
-    echo "export PATH="/usr/local/cuda-12.4/bin:$PATH"" >> .bashrc && \
-    echo "export LD_LIBRARY_PATH="/usr/local/cuda-12.4/lib64:$LD_LIBRARY_PATH"" >> .bashrc \
-    ; else echo "Skipping exporting CUDA path." ; fi
+ENV PATH="$PATH:/usr/local/cuda-12.4/bin"
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda-12.4/lib64"
 
 RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BACK_PROJECTION_TAG}.tar.gz > ./back-projection.tar.gz && \
     mkdir -p ./back-projection && \
