@@ -18,7 +18,7 @@ LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ARG USEGPU="true"
+ARG USEGPU="false"
 ENV USEGPU=${USEGPU}
 
 ENV PYTHONDONTWRITEBYTECODE=true
