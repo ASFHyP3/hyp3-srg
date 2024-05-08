@@ -18,7 +18,7 @@ LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ARG USEGPU="false"
+ARG USEGPU="true"
 ENV USEGPU=${USEGPU}
 
 ENV PYTHONDONTWRITEBYTECODE=true
@@ -43,7 +43,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 
 COPY ./scripts/install_cuda.sh ./
 RUN chmod +x ./install_cuda.sh
-RUN if [[ $USEGPU == "yes" ]] ; then ./install_cuda.sh ; else echo "Skipping CUDA install..." ; fi
+RUN if [[ $USEGPU == "true" ]] ; then ./install_cuda.sh ; else echo "Skipping CUDA install..." ; fi
 
 USER ${CONDA_UID}
 WORKDIR /home/conda/
