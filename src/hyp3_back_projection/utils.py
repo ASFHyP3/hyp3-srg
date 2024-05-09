@@ -155,16 +155,19 @@ def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = Fals
     bbox = shape(result.geojson()['geometry'])
 
     zip_path = output_dir / f'{granule_name[:-4]}.zip'
-    out_path = output_dir / f'{granule_name[:-4]}.SAFE'
+    if unzip:
+        out_path = zip_path
+    else:
+        out_path = output_dir / f'{granule_name[:-4]}.SAFE'
 
     if not out_path.exists() and not zip_path.exists():
         result.download(path=output_dir, session=session)
 
-    if not out_path.exists() and unzip:
+    if not out_path.exists():
         with ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall('.')
 
-    if zip_path.exists():
+    if zip_path.exists() and unzip:
         zip_path.unlink()
 
     return out_path, bbox
