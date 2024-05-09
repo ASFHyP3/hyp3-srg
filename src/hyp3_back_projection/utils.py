@@ -157,7 +157,8 @@ def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = Fals
     zip_path = output_dir / f'{granule_name[:-4]}.zip'
     if unzip:
         out_path = zip_path
-        result.download(path=output_dir, session=session)
+        if not out_path.exists():
+            result.download(path=output_dir, session=session)
     else:
         out_path = output_dir / f'{granule_name[:-4]}.SAFE'
         if not out_path.exists() and not zip_path.exists():

@@ -54,7 +54,7 @@ def back_project_granules(granule_orbit_pairs: Iterable, work_dir: Path, gpu: bo
 
     if gpu:
         os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-        os.environ['CUDA_VISIBLE_DEVICES'] = 1
+        os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
     cmd = 'sentinel/sentinel_scene_multigpu.py' if gpu else 'sentinel/sentinel_scene_cpu.py'
     for granule_path, orbit_path in granule_orbit_pairs:
@@ -151,8 +151,7 @@ def back_project(
     bboxs = []
     granule_orbit_pairs = []
     for granule in granules:
-        unzip = True if not gpu else False
-        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir, unzip)
+        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir, unzip=True)
         orbit_path = utils.download_orbit(granule, work_dir)
         bboxs.append(granule_bbox)
         granule_orbit_pairs.append((granule_path, orbit_path))
