@@ -157,18 +157,18 @@ def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = Fals
     zip_path = output_dir / f'{granule_name[:-4]}.zip'
     if unzip:
         out_path = zip_path
+        result.download(path=output_dir, session=session)
     else:
         out_path = output_dir / f'{granule_name[:-4]}.SAFE'
+        if not out_path.exists() and not zip_path.exists():
+            result.download(path=output_dir, session=session)
 
-    if not out_path.exists() and not zip_path.exists():
-        result.download(path=output_dir, session=session)
+        if not out_path.exists():
+            with ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall('.')
 
-    if not out_path.exists():
-        with ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall('.')
-
-    if zip_path.exists() and unzip:
-        zip_path.unlink()
+        if zip_path.exists() and unzip:
+            zip_path.unlink()
 
     return out_path, bbox
 
@@ -209,7 +209,7 @@ def call_stanford_module(local_name, args: List = [], work_dir: Optional[Path] =
 def how_many_gpus():
     """Get the number of GPUs available on the system using Stanford script."""
     cmd = (get_proc_home() / 'sentinel' / 'howmanygpus').resolve()
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    proc = subprocess.Popen(str(cmd), stdout=subprocess.PIPE, shell=True)
     (param, err) = proc.communicate()
     ngpus = int(str(param, 'UTF-8').split()[0])
     return ngpus

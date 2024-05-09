@@ -49,7 +49,7 @@ def back_project_cpu(granule_orbit_pairs: Iterable, work_dir: Path) -> None:
         granule_orbit_pairs: List of tuples of granule and orbit file paths
         work_dir: Working directory for processing
     """
-    check_required_files(['elevation.dem', 'elevation.dem.rsc', 'params'])
+    check_required_files(['elevation.dem', 'elevation.dem.rsc', 'params'], work_dir)
 
     for granule_path, orbit_path in granule_orbit_pairs:
         args = [str(granule_path.with_suffix('')), str(orbit_path)]
@@ -73,7 +73,7 @@ def back_project_gpu(granule_orbit_pairs: Iterable, work_dir: Path) -> None:
         work_dir: Working directory for processing
     """
     n_gpus = utils.how_many_gpus()
-    create_zipped_safe_list([x[0] for x in granule_orbit_pairs], work_dir)
+    create_zipped_safe_list([x[0] for x in granule_orbit_pairs], work_dir=work_dir)
 
     check_required_files(['elevation.dem', 'elevation.dem.rsc', 'params', 'ziplist'])
 
@@ -145,7 +145,8 @@ def back_project(
     bboxs = []
     granule_orbit_pairs = []
     for granule in granules:
-        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir)
+        unzip = True if not gpu else False
+        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir, unzip)
         orbit_path = utils.download_orbit(granule, work_dir)
         bboxs.append(granule_bbox)
         granule_orbit_pairs.append((granule_path, orbit_path))
