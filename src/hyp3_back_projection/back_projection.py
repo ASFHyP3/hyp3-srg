@@ -4,6 +4,7 @@ back-projection processing
 
 import argparse
 import logging
+import os
 import zipfile
 from pathlib import Path
 from typing import Iterable, Optional
@@ -42,7 +43,7 @@ def clean_up_after_back_projection(work_dir: Path) -> None:
         [f.unlink() for f in work_dir.glob(pattern)]
 
 
-def back_project_cpu(granule_orbit_pairs: Iterable, work_dir: Path) -> None:
+def back_project_granules(granule_orbit_pairs: Iterable, work_dir: Path, gpu: bool = False) -> None:
     """Back-project a set of Sentinel-1 level-0 granules using the CPU-based workflow.
 
     Args:
@@ -51,9 +52,14 @@ def back_project_cpu(granule_orbit_pairs: Iterable, work_dir: Path) -> None:
     """
     check_required_files(['elevation.dem', 'elevation.dem.rsc', 'params'], work_dir)
 
+    if gpu:
+        os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+        os.environ['CUDA_VISIBLE_DEVICES'] = 1
+
+    cmd = 'sentinel/sentinel_scene_multigpu.py' if gpu else 'sentinel/sentinel_scene_cpu.py'
     for granule_path, orbit_path in granule_orbit_pairs:
         args = [str(granule_path.with_suffix('')), str(orbit_path)]
-        utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', args, work_dir=work_dir)
+        utils.call_stanford_module(cmd, args, work_dir=work_dir)
 
     clean_up_after_back_projection(work_dir)
 
@@ -155,10 +161,7 @@ def back_project(
     dem_path = dem.download_dem_for_back_projection(full_bbox, work_dir)
     create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
-    if gpu:
-        back_project_gpu(granule_orbit_pairs, work_dir=work_dir)
-    else:
-        back_project_cpu(granule_orbit_pairs, work_dir=work_dir)
+    back_project_granules(granule_orbit_pairs, work_dir=work_dir, gpu=gpu)
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
