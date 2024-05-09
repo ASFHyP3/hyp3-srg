@@ -135,7 +135,7 @@ def get_earthdata_credentials() -> Tuple[str, str]:
     )
 
 
-def download_raw_granule(granule_name: str, output_dir: Path) -> Tuple[Path, Polygon]:
+def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = False) -> Tuple[Path, Polygon]:
     """Download a S1 granule using asf_search. Return its path
     and buffered extent.
 
@@ -160,7 +160,7 @@ def download_raw_granule(granule_name: str, output_dir: Path) -> Tuple[Path, Pol
     if not out_path.exists() and not zip_path.exists():
         result.download(path=output_dir, session=session)
 
-    if not out_path.exists():
+    if not out_path.exists() and unzip:
         with ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall('.')
 
@@ -201,3 +201,12 @@ def call_stanford_module(local_name, args: List = [], work_dir: Optional[Path] =
     args = [str(x) for x in args]
     print(f'Calling {local_name} {" ".join(args)} in directory {work_dir}')
     subprocess.run([script, *args], cwd=work_dir, check=True)
+
+
+def how_many_gpus():
+    """Get the number of GPUs available on the system using Stanford script."""
+    cmd = (get_proc_home() / 'sentinel' / 'howmanygpus').resolve()
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    (param, err) = proc.communicate()
+    ngpus = int(str(param, 'UTF-8').split()[0])
+    return ngpus

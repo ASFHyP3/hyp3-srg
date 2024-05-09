@@ -30,26 +30,56 @@ def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
         f.write('\n'.join(lines))
 
 
-def back_project_single_granule(granule_path: Path, orbit_path: Path, work_dir: Path, gpu: bool = False) -> None:
-    """Back-project a single Sentinel-1 level-0 granule.
-
-    Args:
-        granule_path: Path to the granule to back-project
-        orbit_path: Path to the orbit file for the granule
-        work_dir: Working directory for processing
-        gpu: Use the GPU-based version of the workflow, defaults to False
-    """
-    required_files = ['elevation.dem', 'elevation.dem.rsc', 'params']
+def check_required_files(required_files: Iterable, work_dir: Path) -> None:
     for file in required_files:
         if not (work_dir / file).exists():
             raise FileNotFoundError(f'Missing required file: {file}')
 
-    script = 'sentinel/sentinel_scene_multigpu.py' if gpu else 'sentinel/sentinel_scene_cpu.py'
-    args = [str(granule_path.with_suffix('')), str(orbit_path)]
-    utils.call_stanford_module(script, args, work_dir=work_dir)
+
+def clean_up_after_back_projection(work_dir: Path) -> None:
     patterns = ['*hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
     for pattern in patterns:
         [f.unlink() for f in work_dir.glob(pattern)]
+
+
+def back_project_cpu(granule_orbit_pairs: Iterable, work_dir: Path) -> None:
+    """Back-project a set of Sentinel-1 level-0 granules using the CPU-based workflow.
+
+    Args:
+        granule_orbit_pairs: List of tuples of granule and orbit file paths
+        work_dir: Working directory for processing
+    """
+    check_required_files(['elevation.dem', 'elevation.dem.rsc', 'params'])
+
+    for granule_path, orbit_path in granule_orbit_pairs:
+        args = [str(granule_path.with_suffix('')), str(orbit_path)]
+        utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', args, work_dir=work_dir)
+
+    clean_up_after_back_projection(work_dir)
+
+
+def create_zipped_safe_list(granule_paths: Iterable, work_dir: Path):
+    """Create a list of the zipped granules to process."""
+    with open(work_dir / 'ziplist', 'w') as f:
+        for granule_path in granule_paths:
+            f.write(f'{granule_path.name}\n')
+
+
+def back_project_gpu(granule_orbit_pairs: Iterable, work_dir: Path) -> None:
+    """Back-project a set of Sentinel-1 level-0 granules using the GPU-based workflow.
+
+    Args:
+        granule_orbit_pairs: List of tuples of granule and orbit file paths
+        work_dir: Working directory for processing
+    """
+    n_gpus = utils.how_many_gpus()
+    create_zipped_safe_list([x[0] for x in granule_orbit_pairs], work_dir)
+
+    check_required_files(['elevation.dem', 'elevation.dem.rsc', 'params', 'ziplist'])
+
+    utils.call_stanford_module('sentinel/process_parallel.py', ['ziplist', str(n_gpus)], work_dir=work_dir)
+
+    clean_up_after_back_projection(work_dir)
 
 
 def create_product(work_dir) -> Path:
@@ -113,19 +143,21 @@ def back_project(
 
     print('Downloading data...')
     bboxs = []
-    back_project_args = []
+    granule_orbit_pairs = []
     for granule in granules:
         granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir)
         orbit_path = utils.download_orbit(granule, work_dir)
         bboxs.append(granule_bbox)
-        back_project_args.append((granule_path, orbit_path))
+        granule_orbit_pairs.append((granule_path, orbit_path))
 
     full_bbox = unary_union(bboxs).buffer(0.1)
     dem_path = dem.download_dem_for_back_projection(full_bbox, work_dir)
     create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
-    for granule_path, orbit_path in back_project_args:
-        back_project_single_granule(granule_path, orbit_path, work_dir=work_dir, gpu=gpu)
+    if gpu:
+        back_project_gpu(granule_orbit_pairs, work_dir=work_dir)
+    else:
+        back_project_cpu(granule_orbit_pairs, work_dir=work_dir)
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
@@ -133,7 +165,7 @@ def back_project(
         zip_path = create_product(work_dir)
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
-    print(f'Finish back-projection for {list(work_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
+    print(f'Finished back-projection for {list(work_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
 
 
 def main():
