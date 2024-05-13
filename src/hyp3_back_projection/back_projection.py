@@ -64,30 +64,6 @@ def back_project_granules(granule_orbit_pairs: Iterable, work_dir: Path, gpu: bo
     clean_up_after_back_projection(work_dir)
 
 
-def create_zipped_safe_list(granule_paths: Iterable, work_dir: Path):
-    """Create a list of the zipped granules to process."""
-    with open(work_dir / 'ziplist', 'w') as f:
-        for granule_path in granule_paths:
-            f.write(f'{granule_path.name}\n')
-
-
-def back_project_gpu(granule_orbit_pairs: Iterable, work_dir: Path) -> None:
-    """Back-project a set of Sentinel-1 level-0 granules using the GPU-based workflow.
-
-    Args:
-        granule_orbit_pairs: List of tuples of granule and orbit file paths
-        work_dir: Working directory for processing
-    """
-    n_gpus = utils.how_many_gpus()
-    create_zipped_safe_list([x[0] for x in granule_orbit_pairs], work_dir=work_dir)
-
-    check_required_files(['elevation.dem', 'elevation.dem.rsc', 'params', 'ziplist'])
-
-    utils.call_stanford_module('sentinel/process_parallel.py', ['ziplist', str(n_gpus)], work_dir=work_dir)
-
-    clean_up_after_back_projection(work_dir)
-
-
 def create_product(work_dir) -> Path:
     """Create a product zip file.
     Includes files needed for further processing (gslc, orbit, and parameter file).
