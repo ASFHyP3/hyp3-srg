@@ -142,6 +142,7 @@ def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = Fals
     Args:
         granule_name: Name of the granule to download
         output_dir: Directory to save the granule in
+        unzip: Unzip the granule if it is a zip file
 
     Returns:
         Tuple of the granule path and its extent as a Polygon
@@ -155,7 +156,7 @@ def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = Fals
     bbox = shape(result.geojson()['geometry'])
 
     zip_path = output_dir / f'{granule_name[:-4]}.zip'
-    if unzip:
+    if not unzip:
         out_path = zip_path
         if not out_path.exists():
             result.download(path=output_dir, session=session)
