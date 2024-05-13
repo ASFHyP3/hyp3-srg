@@ -60,7 +60,7 @@ can be found [here](https://docs.nvidia.com/datacenter/cloud-native/container-to
 ### EC2 Setup
 When running on an EC2 instance, the following setup is recommended:
 1. Create a [P3-family EC2 instance](https://aws.amazon.com/ec2/instance-types/p3/) with the [Amazon Linux 2 AMI with NVIDIA TESLA GPU Driver](https://aws.amazon.com/marketplace/pp/prodview-64e4rx3h733ru?sr=0-4&ref_=beagle&applicationId=AWSMPContessa)
-2. Install Docker and the nvidia-container-toolkit on the EC2
+2. Install Docker and the nvidia-container-toolkit on the EC2 instance:
 ```bash
 sudo yum-config-manager --disable amzn2-graphics
 curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
@@ -68,13 +68,13 @@ sudo yum install docker -y
 sudo yum install nvidia-container-toolkit -y
 sudo yum-config-manager --enable amzn2-graphics
 ```
-3. Optionally, set up Docker to not require `sudo` and to start when the instance starts
+3. Optionally, set up Docker to not require `sudo` and to start when the EC2 instance starts
 ```bash
 sudo systemctl start docker && \
 sudo usermod -a -G docker ec2-user && \
 sudo systemctl enable docker
 ```
-4. Exit the instance and re-enter
+4. Exit the EC2 instance and re-enter
 5. To test the GPU setup, run the base NVIDIA container:
 ```bash
 docker run -it --gpus all nvidia/cuda:12.4.1-devel-ubuntu20.04 nvidia-smi
