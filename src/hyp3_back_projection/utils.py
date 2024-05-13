@@ -135,13 +135,14 @@ def get_earthdata_credentials() -> Tuple[str, str]:
     )
 
 
-def download_raw_granule(granule_name: str, output_dir: Path) -> Tuple[Path, Polygon]:
+def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = False) -> Tuple[Path, Polygon]:
     """Download a S1 granule using asf_search. Return its path
     and buffered extent.
 
     Args:
         granule_name: Name of the granule to download
         output_dir: Directory to save the granule in
+        unzip: Unzip the granule if it is a zip file
 
     Returns:
         Tuple of the granule path and its extent as a Polygon
@@ -155,17 +156,21 @@ def download_raw_granule(granule_name: str, output_dir: Path) -> Tuple[Path, Pol
     bbox = shape(result.geojson()['geometry'])
 
     zip_path = output_dir / f'{granule_name[:-4]}.zip'
-    out_path = output_dir / f'{granule_name[:-4]}.SAFE'
+    if not unzip:
+        out_path = zip_path
+        if not out_path.exists():
+            result.download(path=output_dir, session=session)
+    else:
+        out_path = output_dir / f'{granule_name[:-4]}.SAFE'
+        if not out_path.exists() and not zip_path.exists():
+            result.download(path=output_dir, session=session)
 
-    if not out_path.exists() and not zip_path.exists():
-        result.download(path=output_dir, session=session)
+        if not out_path.exists():
+            with ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall('.')
 
-    if not out_path.exists():
-        with ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall('.')
-
-    if zip_path.exists():
-        zip_path.unlink()
+        if zip_path.exists() and unzip:
+            zip_path.unlink()
 
     return out_path, bbox
 
@@ -201,3 +206,12 @@ def call_stanford_module(local_name, args: List = [], work_dir: Optional[Path] =
     args = [str(x) for x in args]
     print(f'Calling {local_name} {" ".join(args)} in directory {work_dir}')
     subprocess.run([script, *args], cwd=work_dir, check=True)
+
+
+def how_many_gpus():
+    """Get the number of GPUs available on the system using Stanford script."""
+    cmd = (get_proc_home() / 'sentinel' / 'howmanygpus').resolve()
+    proc = subprocess.Popen(str(cmd), stdout=subprocess.PIPE, shell=True)
+    (param, err) = proc.communicate()
+    ngpus = int(str(param, 'UTF-8').split()[0])
+    return ngpus

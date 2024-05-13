@@ -4,6 +4,7 @@ back-projection processing
 
 import argparse
 import logging
+import os
 import zipfile
 from pathlib import Path
 from typing import Iterable, Optional
@@ -30,26 +31,40 @@ def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
         f.write('\n'.join(lines))
 
 
-def back_project_single_granule(granule_path: Path, orbit_path: Path, work_dir: Path) -> None:
-    """Back-project a single Sentinel-1 level-0 granule.
-
-    Args:
-        granule_path: Path to the granule to back-project
-        orbit_path: Path to the orbit file for the granule
-    """
-    required_files = ['elevation.dem', 'elevation.dem.rsc', 'params']
+def check_required_files(required_files: Iterable, work_dir: Path) -> None:
     for file in required_files:
         if not (work_dir / file).exists():
             raise FileNotFoundError(f'Missing required file: {file}')
 
-    args = [str(granule_path.with_suffix('')), str(orbit_path)]
-    utils.call_stanford_module('sentinel/sentinel_scene_cpu.py', args, work_dir=work_dir)
+
+def clean_up_after_back_projection(work_dir: Path) -> None:
     patterns = ['*hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
     for pattern in patterns:
         [f.unlink() for f in work_dir.glob(pattern)]
 
 
-def create_product(work_dir):
+def back_project_granules(granule_orbit_pairs: Iterable, work_dir: Path, gpu: bool = False) -> None:
+    """Back-project a set of Sentinel-1 level-0 granules using the CPU-based workflow.
+
+    Args:
+        granule_orbit_pairs: List of tuples of granule and orbit file paths
+        work_dir: Working directory for processing
+    """
+    check_required_files(['elevation.dem', 'elevation.dem.rsc', 'params'], work_dir)
+
+    if gpu:
+        os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+
+    cmd = 'sentinel/sentinel_scene_multigpu.py' if gpu else 'sentinel/sentinel_scene_cpu.py'
+    for granule_path, orbit_path in granule_orbit_pairs:
+        args = [str(granule_path.with_suffix('')), str(orbit_path)]
+        utils.call_stanford_module(cmd, args, work_dir=work_dir)
+
+    clean_up_after_back_projection(work_dir)
+
+
+def create_product(work_dir) -> Path:
     """Create a product zip file.
     Includes files needed for further processing (gslc, orbit, and parameter file).
 
@@ -88,7 +103,8 @@ def back_project(
     bucket: str = None,
     bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
-) -> Path:
+    gpu: bool = False,
+):
     """Back-project a set of Sentinel-1 level-0 granules.
 
     Args:
@@ -100,6 +116,7 @@ def back_project(
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
+        gpu: Use the GPU-based version of the workflow
     """
     utils.set_creds('EARTHDATA', earthdata_username, earthdata_password)
     utils.set_creds('ESA', esa_username, esa_password)
@@ -108,19 +125,18 @@ def back_project(
 
     print('Downloading data...')
     bboxs = []
-    back_project_args = []
+    granule_orbit_pairs = []
     for granule in granules:
-        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir)
+        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir, unzip=True)
         orbit_path = utils.download_orbit(granule, work_dir)
         bboxs.append(granule_bbox)
-        back_project_args.append((granule_path, orbit_path))
+        granule_orbit_pairs.append((granule_path, orbit_path))
 
     full_bbox = unary_union(bboxs).buffer(0.1)
     dem_path = dem.download_dem_for_back_projection(full_bbox, work_dir)
     create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
-    for granule_path, orbit_path in back_project_args:
-        back_project_single_granule(granule_path, orbit_path, work_dir=work_dir)
+    back_project_granules(granule_orbit_pairs, work_dir=work_dir, gpu=gpu)
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
@@ -128,7 +144,7 @@ def back_project(
         zip_path = create_product(work_dir)
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
-    print(f'Finish back-projection for {list(work_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
+    print(f'Finished back-projection for {list(work_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
 
 
 def main():
@@ -146,6 +162,7 @@ def main():
     parser.add_argument('--esa-password', default=None, help="Password for ESA's Copernicus Data Space Ecosystem")
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
+    parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
     parser.add_argument('granules', nargs='+', help='Level-0 S1 granule to back-project.')
     args = parser.parse_args()
 
