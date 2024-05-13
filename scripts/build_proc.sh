@@ -7,6 +7,7 @@ if [[ "$USEGPU" == "true" ]]; then
     echo 'building with GPU support'
 fi
 
+
 cd DEM
 gfortran -o mosaicDEM mosaicDEM.f90
 gfortran -o createspecialdem createspecialdem.f90
@@ -85,12 +86,20 @@ echo 'built snaphu'
 
 cd sentinel
 
+if [[ "$USEGPU" == "true" ]]; then
+    # nvcc -o gpu_arch gpu_arch.cu && chmod +x gpu_arch
+    # echo 'built gpu architecture probe'
+
+    # ./gpu_arch | cat > GPU_ARCH; source ./GPU_ARCH; rm GPU_ARCH
+    echo 'using GPU arch:' $GPU_ARCH
+fi
+
 gcc -c filelen.c io.c sentinel_raw_process.c decode_line_memory.c -lm -fopenmp
 
 echo 'built raw_process components in sentinel'
 
 if [[ "$USEGPU" == "true" ]]; then
-    nvcc -gencode arch=compute_89,code=sm_89 -c azimuth_compress.cu -Wno-deprecated-gpu-targets
+    nvcc -gencode arch=compute_70,code=sm_70 -c azimuth_compress.cu -Wno-deprecated-gpu-targets
 fi
 
 gfortran -c processsub.f90 backprojectgpusub.f90 bounds.f90 orbitrangetime.f90 latlon.f90 intp_orbit.f90 radar_to_xyz.f90 unitvec.f90 tcnbasis.f90 curvature.f90 cross.f90 orbithermite.f sentineltimingsub.f90 getburststatevectors.f90 -ffixed-line-length-none -fopenmp

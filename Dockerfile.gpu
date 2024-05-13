@@ -21,6 +21,7 @@ ARG MINIFORGE_VERSION=24.3.0-0
 
 # USEGPU environment variable used by build_proc.sh
 ENV USEGPU="true" 
+ENV GPU_ARCH="70"
 ENV CONDA_DIR=/opt/conda
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH=${CONDA_DIR}/bin:${PATH}
