@@ -51,3 +51,36 @@ Your credentials can be passed to the workflows via command-line options (`--esa
 
 If you haven't set up a `.netrc` file
 before, check out this [guide](https://harmony.earthdata.nasa.gov/docs#getting-started) to get started.
+
+## GPU Setup:
+In order for Docker to be able to use the host's GPU, the host must have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) installed and configured. 
+The process is different for different OS's and Linux distros. The setup process for the most common distros, including Ubuntu, 
+can be found [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuration). Make sure to follow the [Docker configuration steps](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuration) after installing the package.
+
+### EC2 Setup
+When running on an EC2 instance, the following setup is recommended:
+1. Create a [P3-family EC2 instance](https://aws.amazon.com/ec2/instance-types/p3/) with the [Amazon Linux 2 AMI with NVIDIA TESLA GPU Driver](https://aws.amazon.com/marketplace/pp/prodview-64e4rx3h733ru?sr=0-4&ref_=beagle&applicationId=AWSMPContessa)
+2. Install Docker and the nvidia-container-toolkit on the EC2 instance:
+```bash
+sudo yum-config-manager --disable amzn2-graphics
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
+sudo yum install docker -y
+sudo yum install nvidia-container-toolkit -y
+sudo yum-config-manager --enable amzn2-graphics
+```
+3. Optionally, set up Docker to not require `sudo` and to start when the EC2 instance starts
+```bash
+sudo systemctl start docker && \
+sudo usermod -a -G docker ec2-user && \
+sudo systemctl enable docker
+```
+4. Exit the EC2 instance and re-enter
+5. To test the GPU setup, run the base NVIDIA container:
+```bash
+docker run -it --gpus all nvidia/cuda:12.4.1-devel-ubuntu20.04 nvidia-smi
+```
+6. Build the actual container and run it:
+```bash
+docker build -t back-projection:gpu -f Dockerfile.gpu .
+docker run --gpus=all --rm -it back-projection:gpu ++process back_projection --help
+```

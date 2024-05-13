@@ -3,8 +3,10 @@
 MULTIARCH_DIR=/usr/lib/$(gcc -print-multiarch)
 FFTW_LIB=$MULTIARCH_DIR/libfftw3f.a
 echo 'using FFTW library:' $FFTW_LIB
+if [[ "$USEGPU" == "true" ]]; then
+    echo 'building with GPU support'
+fi
 
-# Works
 cd DEM
 gfortran -o mosaicDEM mosaicDEM.f90
 gfortran -o createspecialdem createspecialdem.f90
@@ -19,9 +21,10 @@ gfortran -c processsubcpu.f90 backprojectcpusub.f90 bounds.f90 orbitrangetime.f9
 gcc -o sentinel_raw_process_cpu sentinel_raw_process_cpu.o decode_line_memory.o processsubcpu.o backprojectcpusub.o azimuth_compress_cpu.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o $FFTW_LIB -lgfortran -lgomp -lm -lrt -lpthread
 echo 'built sentinel_raw_process_cpu'
 
-# nvcc -o howmanygpus howmanygpus.cu
-#
-# echo 'built howmanygpus'
+if [[ "$USEGPU" == "true" ]]; then
+    nvcc -o howmanygpus howmanygpus.cu
+    echo 'built howmanygpus'
+fi
 
 cd geo2rdr
 gfortran -o estimatebaseline estimatebaseline.f90 intp_orbit.f90 latlon.f90 orbithermite.f -ffixed-line-length-none
@@ -80,20 +83,20 @@ cd ..
 
 echo 'built snaphu'
 
-# nvcc -o gpu_arch gpu_arch.cu
-# echo 'built gpu architecture probe'
-#
-# ./gpu_arch | cat > GPU_ARCH; source ./GPU_ARCH; rm GPU_ARCH
-
 cd sentinel
 
 gcc -c filelen.c io.c sentinel_raw_process.c decode_line_memory.c -lm -fopenmp
 
 echo 'built raw_process components in sentinel'
 
-# nvcc -gencode arch=compute_$GPU_ARCH,code=sm_$GPU_ARCH -c azimuth_compress.cu -Wno-deprecated-gpu-targets
+if [[ "$USEGPU" == "true" ]]; then
+    nvcc -gencode arch=compute_89,code=sm_89 -c azimuth_compress.cu -Wno-deprecated-gpu-targets
+fi
 
 gfortran -c processsub.f90 backprojectgpusub.f90 bounds.f90 orbitrangetime.f90 latlon.f90 intp_orbit.f90 radar_to_xyz.f90 unitvec.f90 tcnbasis.f90 curvature.f90 cross.f90 orbithermite.f sentineltimingsub.f90 getburststatevectors.f90 -ffixed-line-length-none -fopenmp
 
-# nvcc -o sentinel_raw_process sentinel_raw_process.o decode_line_memory.o processsub.o backprojectgpusub.o azimuth_compress.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o $FFTW_LIB -lstdc++ -lgfortran -lgomp
+if [[ "$USEGPU" == "true" ]]; then
+    nvcc -o sentinel_raw_process sentinel_raw_process.o decode_line_memory.o processsub.o backprojectgpusub.o azimuth_compress.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o $FFTW_LIB -lstdc++ -lgfortran -lgomp
+fi
+
 cd ..
