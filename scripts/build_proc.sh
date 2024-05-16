@@ -87,7 +87,7 @@ if [[ "$USEGPU" == "true" ]]; then
     nvcc -o gpu_arch gpu_arch.cu
     echo 'built gpu architecture probe'
     ./gpu_arch | cat > GPU_ARCH; source ./GPU_ARCH; rm GPU_ARCH
-    echo $GPU_ARCH
+    echo GPU Architecture version is: $GPU_ARCH
 fi
 
 cd sentinel
