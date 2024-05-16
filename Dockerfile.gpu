@@ -61,25 +61,20 @@ SHELL ["/bin/bash", "-l", "-c"]
 USER ${CONDA_UID}
 WORKDIR /home/conda/
 
+# TODO: switch to released version of plugin when remove_files branch is merged
 # RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BACK_PROJECTION_TAG}.tar.gz > ./back-projection.tar.gz && \
 #     mkdir -p ./back-projection && \
 #     tar -xvf ./back-projection.tar.gz -C ./back-projection/ --strip=1 && \
 #     rm ./back-projection.tar.gz && \
 #     rm -rf ./back-projection/fft
-
 RUN git clone -b remove_files https://github.com/ASFHyP3/back-projection.git
 
 COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc.sh ./back-projection
 RUN cd /home/conda/back-projection && \
     chmod +x ./build_proc.sh && \
     find $PROC_HOME -type f -name "*.py" -exec chmod +x {} + && \
+    ./build_proc.sh && \
     cd /home/conda/
-
-# COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc.sh ./back-projection
-# RUN cd /home/conda/back-projection && \
-#     chmod +x ./build_proc.sh && \
-#     ./build_proc.sh && \
-#     cd /home/conda/
 
 COPY --chown=${CONDA_UID}:${CONDA_GID} . /hyp3-back-projection/
 

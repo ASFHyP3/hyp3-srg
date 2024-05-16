@@ -83,9 +83,11 @@ cd ..
 echo 'built snaphu'
 
 if [[ "$USEGPU" == "true" ]]; then
+    # TODO: this is not grabbing the correct value during docker build
     nvcc -o gpu_arch gpu_arch.cu
     echo 'built gpu architecture probe'
     ./gpu_arch | cat > GPU_ARCH; source ./GPU_ARCH; rm GPU_ARCH
+    echo $GPU_ARCH
 fi
 
 cd sentinel
@@ -95,13 +97,13 @@ gcc -c filelen.c io.c sentinel_raw_process.c decode_line_memory.c -lm -fopenmp
 echo 'built raw_process components in sentinel'
 
 if [[ "$USEGPU" == "true" ]]; then
-    nvcc -gencode arch=compute_$GPU_ARCH,code=sm_$GPU_ARCH -c azimuth_compress.cu -Wno-deprecated-gpu-targets
+    nvcc -gencode arch=compute_89,code=sm_89 -c azimuth_compress.cu -Wno-deprecated-gpu-targets
 fi
 
 gfortran -c processsub.f90 backprojectgpusub.f90 bounds.f90 orbitrangetime.f90 latlon.f90 intp_orbit.f90 radar_to_xyz.f90 unitvec.f90 tcnbasis.f90 curvature.f90 cross.f90 orbithermite.f sentineltimingsub.f90 getburststatevectors.f90 -ffixed-line-length-none -fopenmp
 
 if [[ "$USEGPU" == "true" ]]; then
-    nvcc -o sentinel_raw_process sentinel_raw_process.o decode_line_memory.o processsub.o backprojectgpusub.o azimuth_compress.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o $FFTW_LIB -lstdc++ -lgfortran -lgomp
+    nvcc -gencode arch=compute_89,code=sm_89 -o sentinel_raw_process sentinel_raw_process.o decode_line_memory.o processsub.o backprojectgpusub.o azimuth_compress.o bounds.o orbitrangetime.o latlon.o intp_orbit.o radar_to_xyz.o unitvec.o tcnbasis.o curvature.o cross.o orbithermite.o filelen.o io.o sentineltimingsub.o getburststatevectors.o $FFTW_LIB -lstdc++ -lgfortran -lgomp
 fi
 
 cd ..
