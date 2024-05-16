@@ -72,7 +72,6 @@ gfortran -o psinterp psinterp.f90 -fopenmp
 echo 'Built cosine_sim and psinterp in ps directory'
 
 cd ..
-tar xf snaphu_v2_0b0_0_0.tar
 cd snaphu_v2.0b0.0.0/src
 make CFLAGS=-O3 -s
 
@@ -83,6 +82,12 @@ cd ..
 
 echo 'built snaphu'
 
+if [[ "$USEGPU" == "true" ]]; then
+    nvcc -o gpu_arch gpu_arch.cu
+    echo 'built gpu architecture probe'
+    ./gpu_arch | cat > GPU_ARCH; source ./GPU_ARCH; rm GPU_ARCH
+fi
+
 cd sentinel
 
 gcc -c filelen.c io.c sentinel_raw_process.c decode_line_memory.c -lm -fopenmp
@@ -90,7 +95,7 @@ gcc -c filelen.c io.c sentinel_raw_process.c decode_line_memory.c -lm -fopenmp
 echo 'built raw_process components in sentinel'
 
 if [[ "$USEGPU" == "true" ]]; then
-    nvcc -gencode arch=compute_89,code=sm_89 -c azimuth_compress.cu -Wno-deprecated-gpu-targets
+    nvcc -gencode arch=compute_$GPU_ARCH,code=sm_$GPU_ARCH -c azimuth_compress.cu -Wno-deprecated-gpu-targets
 fi
 
 gfortran -c processsub.f90 backprojectgpusub.f90 bounds.f90 orbitrangetime.f90 latlon.f90 intp_orbit.f90 radar_to_xyz.f90 unitvec.f90 tcnbasis.f90 curvature.f90 cross.f90 orbithermite.f sentineltimingsub.f90 getburststatevectors.f90 -ffixed-line-length-none -fopenmp
