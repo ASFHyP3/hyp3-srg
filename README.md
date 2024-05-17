@@ -59,28 +59,11 @@ can be found [here](https://docs.nvidia.com/datacenter/cloud-native/container-to
 
 ### EC2 Setup
 When running on an EC2 instance, the following setup is recommended:
-1. Create a [P3-family EC2 instance](https://aws.amazon.com/ec2/instance-types/p3/) with the [Amazon Linux 2 AMI with NVIDIA TESLA GPU Driver](https://aws.amazon.com/marketplace/pp/prodview-64e4rx3h733ru?sr=0-4&ref_=beagle&applicationId=AWSMPContessa)
-2. Install Docker and the nvidia-container-toolkit on the EC2 instance:
+1. Create a [G6-family EC2 instance](https://aws.amazon.com/ec2/instance-types/g6/) with the [Amazon Linux 2 Deep Learning AMI with NVIDIA Drivers](https://aws.amazon.com/machine-learning/amis/features/)
+2. Build the GPU docker container with the correct compute capability version. To determine this value, run `nvidia-smi` on the instance to obtain GPU type, then cross-reference this information with NVIDIA's [GPU type compute capability list](https://developer.nvidia.com/cuda-gpus). For a g6.xlarge instance, this would be:
 ```bash
-sudo yum-config-manager --disable amzn2-graphics
-curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo
-sudo yum install docker -y
-sudo yum install nvidia-container-toolkit -y
-sudo yum-config-manager --enable amzn2-graphics
+docker --build-arg="GPU_ARCH=89" -t back-projection:gpu-89 -f Dockerfile.gpu .
 ```
-3. Optionally, set up Docker to not require `sudo` and to start when the EC2 instance starts
-```bash
-sudo systemctl start docker && \
-sudo usermod -a -G docker ec2-user && \
-sudo systemctl enable docker
-```
-4. Exit the EC2 instance and re-enter
-5. To test the GPU setup, run the base NVIDIA container:
-```bash
-docker run -it --gpus all nvidia/cuda:12.4.1-devel-ubuntu20.04 nvidia-smi
-```
-6. Build the actual container and run it:
-```bash
-docker build -t back-projection:gpu -f Dockerfile.gpu .
-docker run --gpus=all --rm -it back-projection:gpu ++process back_projection --help
-```
+Note: this only needs to be done once per instance type, since the compute capability version will always be the same for a given instance type.
+
+The default value for this argument is `89` - the correct value for g6.xlarge instances.
