@@ -1,35 +1,27 @@
-FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 as builder
+FROM nvidia/cuda:12.4.1-devel-ubi9 as builder
 
 # FIXME: should be able to find this dynamically
 ARG GPU_ARCH=89
-ARG BACK_PROJECTION_TAG=0.2.0
+ARG FFTW_LIB=/usr/lib64/libfftw3f.so
 
 # GPU_ARCH and USEGPU environment variable used by build_proc.sh
-ENV FFTW_LIB=/usr/lib/x86_64-linux-gnu/libfftw3f.a
 ENV GPU_ARCH=${GPU_ARCH}
 ENV USEGPU=true
 
-# FIXME: can remove git after switch back to released version of back-projection
-RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl git build-essential gfortran libfftw3-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# FIXME: switch to released version of plugin when remove_files branch is merged
+RUN dnf -y update && dnf install --allowerasing -y unzip vim curl git make automake gcc gcc-c++ gfortran fftw-devel && \
+    dnf clean all && rm -rf /var/cache/dnf/*
+    
+# FIXME: switch main branch when remove_files branch is merged
 RUN git clone -b remove_files https://github.com/ASFHyP3/back-projection.git
-# RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BACK_PROJECTION_TAG}.tar.gz > ./back-projection.tar.gz && \
-#     mkdir -p ./back-projection && \
-#     tar -xvf ./back-projection.tar.gz -C ./back-projection/ --strip=1 && \
-#     rm ./back-projection.tar.gz && \
-#     rm -rf ./back-projection/fft
 
 COPY . /hyp3-back-projection/
 COPY ./scripts/build_proc.sh ./back-projection
 RUN cd /back-projection && \
-    chmod +x ./build_proc.sh && \
     find $PROC_HOME -type f -name "*.py" -exec chmod +x {} + && \
     ./build_proc.sh && \
     cd /
 
-FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04 as runner
+FROM nvidia/cuda:12.4.1-runtime-ubi9 as runner
 
 # For opencontainers label definitions, see:
 #    https://github.com/opencontainers/image-spec/blob/master/annotations.md
@@ -56,26 +48,19 @@ ENV PROC_HOME=/back-projection
 ENV MYHOME=/home/conda
 
 # Conda setup
-RUN apt-get update > /dev/null && \
-    apt-get install --no-install-recommends --yes \
-        wget bzip2 ca-certificates \
-        git \
-        tini \
-        > /dev/null && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
+RUN dnf install --setopt=install_weak_deps=False --nodocs -y wget bzip2 ca-certificates git > /dev/null && \
     wget --no-hsts --quiet https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/${MINIFORGE_NAME}-${MINIFORGE_VERSION}-Linux-$(uname -m).sh -O /tmp/miniforge.sh && \
     /bin/bash /tmp/miniforge.sh -b -p ${CONDA_DIR} && \
     rm /tmp/miniforge.sh && \
     conda clean --tarballs --index-cache --packages --yes && \
     find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
     find ${CONDA_DIR} -follow -type f -name '*.pyc' -delete && \
-    conda clean --force-pkgs-dirs --all --yes  && \
+    conda clean --force-pkgs-dirs --all --yes && \
     echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> /etc/skel/.bashrc && \
     echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> ~/.bashrc
 
-RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl gfortran && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN dnf -y update && dnf install --allowerasing -y unzip vim curl gfortran fftw-devel && \
+    dnf clean all && rm -rf /var/cache/dnf/*
 
 RUN groupadd -g "${CONDA_GID}" --system conda && \
     useradd -l -u "${CONDA_UID}" -g "${CONDA_GID}" --system -d /home/conda -m  -s /bin/bash conda && \
@@ -88,6 +73,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 USER ${CONDA_UID}
 WORKDIR /home/conda/
 
+# UIDs above 999 cause a warning in rockylinux systems, but are OK in this case.
 COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /back-projection /back-projection
 COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /hyp3-back-projection /hyp3-back-projection
 
