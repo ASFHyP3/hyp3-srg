@@ -15,16 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl 
 
 # FIXME: switch to released version of plugin when remove_files branch is merged
 RUN git clone -b remove_files https://github.com/ASFHyP3/back-projection.git
-# RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BACK_PROJECTION_TAG}.tar.gz > ./back-projection.tar.gz && \
-#     mkdir -p ./back-projection && \
-#     tar -xvf ./back-projection.tar.gz -C ./back-projection/ --strip=1 && \
-#     rm ./back-projection.tar.gz && \
-#     rm -rf ./back-projection/fft
 
 COPY . /hyp3-back-projection/
 COPY ./scripts/build_proc.sh ./back-projection
 RUN cd /back-projection && \
-    chmod +x ./build_proc.sh && \
     find $PROC_HOME -type f -name "*.py" -exec chmod +x {} + && \
     ./build_proc.sh && \
     cd /
@@ -56,13 +50,11 @@ ENV PROC_HOME=/back-projection
 ENV MYHOME=/home/conda
 
 # Conda setup
-RUN apt-get update > /dev/null && \
-    apt-get install --no-install-recommends --yes \
+RUN apt-get install --no-install-recommends --yes \
         wget bzip2 ca-certificates \
         git \
         tini \
         > /dev/null && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     wget --no-hsts --quiet https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/${MINIFORGE_NAME}-${MINIFORGE_VERSION}-Linux-$(uname -m).sh -O /tmp/miniforge.sh && \
     /bin/bash /tmp/miniforge.sh -b -p ${CONDA_DIR} && \
