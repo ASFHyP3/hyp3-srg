@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MULTIARCH_DIR=/usr/lib/$(gcc -print-multiarch)
-FFTW_LIB=$MULTIARCH_DIR/libfftw3f.a
+# MULTIARCH_DIR=/usr/lib/$(gcc -print-multiarch)
+# FFTW_LIB=$MULTIARCH_DIR/libfftw3f.a
 echo 'using FFTW library:' $FFTW_LIB
 if [[ "$USEGPU" == "true" ]]; then
     echo 'building with GPU support, capability version' $GPU_ARCH
