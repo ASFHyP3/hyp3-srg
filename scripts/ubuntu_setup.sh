@@ -17,7 +17,14 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 
 # Installs
 sudo apt-get update && \
-sudo apt-get install -y nvidia-headless-535-server nvidia-utils-535-server docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin && \
+sudo apt-get install -y nvidia-headless-535-server nvidia-utils-535-server docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin awscli git && \
 sudo usermod -aG docker $USER
+
+# Cleanup temporary files
+sudo apt-get clean
+sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Optimize the filesystem (for ext4)
+sudo e4defrag /
 
 # RESTART YOUR INSTANCE!!!
