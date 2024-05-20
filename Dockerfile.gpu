@@ -13,8 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl git build-essential gfortran libfftw3-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# FIXME: switch to main branch of plugin when remove_files branch is merged
-RUN git clone -b remove_files https://github.com/ASFHyP3/back-projection.git
+RUN git clone -b main https://github.com/ASFHyP3/back-projection.git
 COPY . /hyp3-back-projection/
 COPY ./scripts/build_proc.sh ./back-projection
 RUN cd /back-projection && ./build_proc.sh && cd /
