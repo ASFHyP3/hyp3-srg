@@ -58,12 +58,16 @@ The process is different for different OS's and Linux distros. The setup process
 can be found [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuration). Make sure to follow the [Docker configuration steps](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuration) after installing the package.
 
 ### EC2 Setup
+> [!CAUTION]
+> Running the docker container on an Amazon Linux 2 runs, but will result in all zero outputs. Work is ongoing to determine what is causing this issue. For now, we recommend using an Ubuntu base image.
+
 When running on an EC2 instance, the following setup is recommended:
-1. Create a [G6-family EC2 instance](https://aws.amazon.com/ec2/instance-types/g6/) with the [Amazon Linux 2 Deep Learning AMI with NVIDIA Drivers](https://aws.amazon.com/machine-learning/amis/features/)
-2. Build the GPU docker container with the correct compute capability version. To determine this value, run `nvidia-smi` on the instance to obtain GPU type, then cross-reference this information with NVIDIA's [GPU type compute capability list](https://developer.nvidia.com/cuda-gpus). For a g6.xlarge instance, this would be:
+1. Create a [G6-family EC2 instance](https://aws.amazon.com/ec2/instance-types/g6/) that has **at least 32 GB of memory** with the [Deep Learning Base OSS Nvidia Driver GPU AMI](https://aws.amazon.com/releasenotes/aws-deep-learning-base-gpu-ami-ubuntu-22-04/).
+2. Alternatively, you can run `scripts/ubuntu_setup.sh` as a [user script on launch](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html) of a base Ubuntu image.
+3. Build the GPU docker container with the correct compute capability version. To determine this value, run `nvidia-smi` on the instance to obtain GPU type, then cross-reference this information with NVIDIA's [GPU type compute capability list](https://developer.nvidia.com/cuda-gpus). For a g6.2xlarge instance, this would be:
 ```bash
 docker --build-arg="GPU_ARCH=89" -t back-projection:gpu-89 -f Dockerfile.gpu .
 ```
 Note: this only needs to be done once per instance type, since the compute capability version will always be the same for a given instance type.
 
-The default value for this argument is `89` - the correct value for g6.xlarge instances.
+The default value for this argument is `89` - the correct value for g6.2xlarge instances.
