@@ -1,4 +1,6 @@
-# GPU setup for the ubuntu 22.04 AMI
+#!/bin/bash
+
+# GPU setup for the Ubuntu 22.04
 
 # NVIDIA source setup
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg && \
@@ -24,7 +26,5 @@ sudo usermod -aG docker $USER
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Optimize the filesystem (for ext4)
-sudo e4defrag /
-
-# RESTART YOUR INSTANCE!!!
+# Reboot
+sudo reboot
