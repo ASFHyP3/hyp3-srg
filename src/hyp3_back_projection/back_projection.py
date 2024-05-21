@@ -140,8 +140,8 @@ def back_project(
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
+    zip_path = create_product(work_dir)
     if bucket:
-        zip_path = create_product(work_dir)
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
     print(f'Finished back-projection for {list(work_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
