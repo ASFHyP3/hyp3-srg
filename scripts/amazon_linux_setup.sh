@@ -14,7 +14,7 @@ rm ./NVIDIA-Linux-x86_64-$DRIVER_VERSION.run
 sudo dnf install -y docker git
 sudo systemctl start docker
 sudo systemctl enable docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker ec2-user
 
 # Install nvidia-container-toolkit
 sudo dnf config-manager --add-repo https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo
