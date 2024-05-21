@@ -59,7 +59,7 @@ can be found [here](https://docs.nvidia.com/datacenter/cloud-native/container-to
 
 ### EC2 Setup
 > [!CAUTION]
-> Running the docker container on an Amazon Linux 2 runs, but will result in all zero outputs. Work is ongoing to determine what is causing this issue. For now, we recommend using an Ubuntu base image.
+> Running the docker container on an Amazon Linux 2023 Deep Learning AMI runs, but will result in all zero outputs. Work is ongoing to determine what is causing this issue. For now, we recommend using option 2.i.
 
 When running on an EC2 instance, the following setup is recommended:
 1. Create a [G6-family EC2 instance](https://aws.amazon.com/ec2/instance-types/g6/) that has **at least 32 GB of memory**.
