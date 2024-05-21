@@ -64,8 +64,8 @@ can be found [here](https://docs.nvidia.com/datacenter/cloud-native/container-to
 When running on an EC2 instance, the following setup is recommended:
 1. Create a [G6-family EC2 instance](https://aws.amazon.com/ec2/instance-types/g6/) that has **at least 32 GB of memory**.
 2. Launch your instance with one of the following setups (**option i is recommended**):
-    1. Use the latest [Amazon Linux 2023 AMI](https://docs.aws.amazon.com/linux/al2023/ug/ec2.html) with the `scripts/amazon_linux_setup.sh` script configured as the as a [user script on launch](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
-    2. Use the latest [Ubuntu AMI](https://cloud-images.ubuntu.com/locator/ec2/) with the `scripts/ubuntu_setup.sh` script configured as the as a [user script on launch](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html)
+    1. Use the latest [Amazon Linux 2023 AMI](https://docs.aws.amazon.com/linux/al2023/ug/ec2.html) with `scripts/amazon_linux_setup.sh` as the [user script on launch](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html).
+    2. Use the latest [Ubuntu AMI](https://cloud-images.ubuntu.com/locator/ec2/) with the `scripts/ubuntu_setup.sh` as the [user script on launch](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html).
     3. Use the [Ubuntu Deep Learning Base OSS Nvidia Driver GPU AMI](https://aws.amazon.com/releasenotes/aws-deep-learning-base-gpu-ami-ubuntu-22-04/) (no install script required).
 3. Build the GPU docker container with the correct compute capability version. To determine this value, run `nvidia-smi` on the instance to obtain GPU type, then cross-reference this information with NVIDIA's [GPU type compute capability list](https://developer.nvidia.com/cuda-gpus). For a g6.2xlarge instance, this would be:
 ```bash
