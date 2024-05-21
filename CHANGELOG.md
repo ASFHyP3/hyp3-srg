@@ -10,6 +10,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 * `scripts/ubuntu_setup.sh` for setting up a GPU-based Ubuntu EC2 AMI.
+* `scripts/amazon_linux_setup.sh` for setting up a GPU-based Amazon Linux 2023 EC2 AMI.
 
 ### Changed
 * Refactored `scripts/build_proc.sh` to combine GPU compilation steps.
