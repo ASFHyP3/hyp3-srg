@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1]
+
+### Fixed
+* Main Dockerfile so that workflow matches changes introduced by fixing GPU workflow.
+
+### Changed
+* Main Dockerfile to use a multi-stage build, mirroring Dockerfile.gpu.
+
 ## [0.5.0]
 
 ### Added
