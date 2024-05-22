@@ -11,7 +11,6 @@ LABEL org.opencontainers.image.url="https://github.com/ASFHyP3/hyp3-back-project
 LABEL org.opencontainers.image.source="https://github.com/ASFHyP3/hyp3-back-projection"
 LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
-ARG DEBIAN_FRONTEND=noninteractive
 ARG CONDA_UID=1000
 ARG CONDA_GID=1000
 
@@ -20,6 +19,7 @@ ENV FFTW_LIB=/usr/lib/x86_64-linux-gnu/libfftw3f.a
 ENV PROC_HOME=/back-projection
 ENV PYTHONDONTWRITEBYTECODE=true
 ENV MYHOME=/home/conda
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends unzip git vim curl build-essential gfortran libfftw3-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -30,15 +30,15 @@ RUN groupadd -g "${CONDA_GID}" --system conda && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/conda/.profile && \
     echo "conda activate base" >> /home/conda/.profile
 
-SHELL ["/bin/bash", "-l", "-c"]
-
-USER ${CONDA_UID}
-WORKDIR /home/conda/
-
 # TODO: change back to main when problem is fixed
 RUN git clone -b fix_path https://github.com/ASFHyP3/back-projection.git /back-projection
 COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc.sh /back-projection
 RUN cd /back-projection && ./build_proc.sh && cd /home/conda/
+
+SHELL ["/bin/bash", "-l", "-c"]
+
+USER ${CONDA_UID}
+WORKDIR /home/conda/
 
 COPY --chown=${CONDA_UID}:${CONDA_GID} . /hyp3-back-projection/
 
