@@ -30,7 +30,6 @@ LABEL org.opencontainers.image.url="https://github.com/ASFHyP3/hyp3-back-project
 LABEL org.opencontainers.image.source="https://github.com/ASFHyP3/hyp3-back-projection"
 LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
-ARG DEBIAN_FRONTEND=noninteractive
 ARG CONDA_UID=1000
 ARG CONDA_GID=1000
 ARG MINIFORGE_NAME=Miniforge3
@@ -42,6 +41,7 @@ ENV PATH=${CONDA_DIR}/bin:${PATH}
 ENV PYTHONDONTWRITEBYTECODE=true
 ENV PROC_HOME=/back-projection
 ENV MYHOME=/home/conda
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Conda setup
 RUN apt-get update && apt-get install --no-install-recommends --yes wget bzip2 ca-certificates git > /dev/null && \
