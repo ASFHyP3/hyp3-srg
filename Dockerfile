@@ -1,4 +1,18 @@
-FROM condaforge/mambaforge:latest
+FROM condaforge/mambaforge:latest as builder
+
+ENV USEGPU=false
+ENV FFTW_LIB=/usr/lib/x86_64-linux-gnu/libfftw3f.a
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl git build-essential gfortran libfftw3-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN git clone -b main https://github.com/ASFHyP3/back-projection.git
+COPY . /hyp3-back-projection/
+COPY ./scripts/build_proc.sh ./back-projection
+RUN cd /back-projection && ./build_proc.sh && cd /
+
+FROM condaforge/mambaforge:latest as runner
 
 # For opencontainers label definitions, see:
 #    https://github.com/opencontainers/image-spec/blob/master/annotations.md
@@ -11,26 +25,16 @@ LABEL org.opencontainers.image.url="https://github.com/ASFHyP3/hyp3-back-project
 LABEL org.opencontainers.image.source="https://github.com/ASFHyP3/hyp3-back-projection"
 LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
-# Dynamic lables to define at build time via `docker build --label`
-# LABEL org.opencontainers.image.created=""
-# LABEL org.opencontainers.image.version=""
-# LABEL org.opencontainers.image.revision=""
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-ENV USEGPU="false"
-
-ENV PYTHONDONTWRITEBYTECODE=true
-ENV PROC_HOME=/home/conda/back-projection
-ENV MYHOME=/home/conda
-
-RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl build-essential gfortran libfftw3-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
 ARG CONDA_UID=1000
 ARG CONDA_GID=1000
-ARG BACK_PROJECTION_TAG=0.2.0
-ARG FFTW_TAG=3.3.9
+
+ENV PROC_HOME=/back-projection
+ENV PYTHONDONTWRITEBYTECODE=true
+ENV MYHOME=/home/conda
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl gfortran && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd -g "${CONDA_GID}" --system conda && \
     useradd -l -u "${CONDA_UID}" -g "${CONDA_GID}" --system -d /home/conda -m  -s /bin/bash conda && \
@@ -43,20 +47,8 @@ SHELL ["/bin/bash", "-l", "-c"]
 USER ${CONDA_UID}
 WORKDIR /home/conda/
 
-RUN curl -sL https://github.com/ASFHyP3/back-projection/archive/refs/tags/v${BACK_PROJECTION_TAG}.tar.gz > ./back-projection.tar.gz && \
-    mkdir -p ./back-projection && \
-    tar -xvf ./back-projection.tar.gz -C ./back-projection/ --strip=1 && \
-    rm ./back-projection.tar.gz && \
-    rm -rf ./back-projection/fft
-
-COPY --chown=${CONDA_UID}:${CONDA_GID} ./scripts/build_proc.sh ./back-projection
-RUN cd /home/conda/back-projection && \
-    chmod +x ./build_proc.sh && \
-    ./build_proc.sh && \
-    find $PROC_HOME -type f -name "*.py" -exec chmod +x {} + && \
-    cd /home/conda/
-
-COPY --chown=${CONDA_UID}:${CONDA_GID} . /hyp3-back-projection/
+COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /back-projection /back-projection
+COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /hyp3-back-projection /hyp3-back-projection
 
 RUN mamba env create -f /hyp3-back-projection/environment.yml && \
     conda clean -afy && \
