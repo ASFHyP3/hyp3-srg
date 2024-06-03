@@ -165,7 +165,7 @@ def main():
     parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
     parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()
-
+    args.granules = [item for sublist in args.granules for item in sublist]
     back_project(**args.__dict__)
 
 
