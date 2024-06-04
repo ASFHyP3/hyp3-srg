@@ -163,9 +163,9 @@ def main():
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
-    parser.add_argument('granules', nargs='+', help='Level-0 S1 granule to back-project.')
+    parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()
-
+    args.granules = [item for sublist in args.granules for item in sublist]
     back_project(**args.__dict__)
 
 
