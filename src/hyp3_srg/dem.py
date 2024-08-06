@@ -27,7 +27,7 @@ def ensure_egm_model_available():
                 f.write(chunk)
 
 
-def download_dem_for_back_projection(
+def download_dem_for_srg(
     footprint: Polygon,
     work_dir: Path,
 ) -> Path:

@@ -133,7 +133,7 @@ def back_project(
         granule_orbit_pairs.append((granule_path, orbit_path))
 
     full_bbox = unary_union(bboxs).buffer(0.1)
-    dem_path = dem.download_dem_for_back_projection(full_bbox, work_dir)
+    dem_path = dem.download_dem_for_srg(full_bbox, work_dir)
     create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
     back_project_granules(granule_orbit_pairs, work_dir=work_dir, gpu=gpu)
