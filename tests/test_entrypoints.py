@@ -1,3 +1,3 @@
-def test_hyp3_back_projection(script_runner):
-    ret = script_runner.run(['python', '-m', 'hyp3_back_projection', '-h'])
+def test_hyp3_srg(script_runner):
+    ret = script_runner.run(['python', '-m', 'hyp3_srg', '-h'])
     assert ret.success

@@ -1,9 +1,9 @@
 from pathlib import Path
 from unittest import mock
 
-from shapely.geometry import box
+from hyp3_srg import dem, utils
 
-from hyp3_back_projection import dem, utils
+from shapely.geometry import box
 
 
 def test_download_dem_for_back_projection(monkeypatch):

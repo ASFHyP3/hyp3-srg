@@ -1,4 +1,4 @@
-name: hyp3-back-projection
+name: hyp3-srg
 channels:
   - conda-forge
   - nodefaults

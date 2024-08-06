@@ -12,7 +12,7 @@ from typing import Iterable, Optional
 from hyp3lib.aws import upload_file_to_s3
 from shapely import unary_union
 
-from hyp3_back_projection import dem, utils
+from hyp3_srg import dem, utils
 
 
 log = logging.getLogger(__name__)
@@ -151,7 +151,7 @@ def main():
     """Back Projection entrypoint.
 
     Example command:
-    python -m hyp3_back_projection ++process back_projection \
+    python -m hyp3_srg ++process back_projection \
         S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42-RAW \
         S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
     """

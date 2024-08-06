@@ -5,7 +5,7 @@ from pathlib import Path
 import requests
 from shapely.geometry import Polygon
 
-from hyp3_back_projection import utils
+from hyp3_srg import utils
 
 
 log = logging.getLogger(__name__)
