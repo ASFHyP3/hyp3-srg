@@ -8,7 +8,7 @@ requires-python = ">=3.10"
 authors = [
     {name="ASF Tools Team", email="UAF-asf-apd@alaska.edu"},
 ]
-description = "HyP3 plugin for back-projection processing"
+description = "HyP3 plugin for SRG Processor SAR processing"
 license = {text = "BSD-3-Clause"}
 classifiers=[
     "Intended Audience :: Science/Research",

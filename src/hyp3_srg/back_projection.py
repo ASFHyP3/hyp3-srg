@@ -1,5 +1,5 @@
 """
-back-projection processing
+GSLC back-projection processing
 """
 
 import argparse

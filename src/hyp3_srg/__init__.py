@@ -1,4 +1,4 @@
-"""HyP3 plugin for back-projection processing"""
+"""HyP3 plugin for SRG Processor SAR processing"""
 
 from importlib.metadata import version
 
