@@ -19,3 +19,4 @@ dependencies:
   - asf_search
   # For running
   - hyp3lib>=3,<4
+  - s1_orbits
