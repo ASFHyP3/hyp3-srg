@@ -34,9 +34,9 @@ docker run -it --rm \
     S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
 ```
 
-## Earthdata Login and ESA Credentials
+## Earthdata Login
 
-For all workflows, the user must provide their Earthdata Login credentials and ESA Copernicus Data Space Ecosystem (CDSE) credentials in order to download input data.
+For all workflows, the user must provide their Earthdata Login credentials in order to download input data.
 
 If you do not already have an Earthdata account, you can sign up [here](https://urs.earthdata.nasa.gov/home).
 
