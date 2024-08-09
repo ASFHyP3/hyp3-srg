@@ -165,7 +165,7 @@ def download_orbit(granule_name: str, output_dir: Path) -> Path:
     Returns:
         Path to the downloaded orbit file
     """
-    orbit_path = str(fetch_for_scene(granule_name, str(output_dir)))
+    orbit_path = str(fetch_for_scene(granule_name, dir=output_dir))
     return orbit_path
 
 
