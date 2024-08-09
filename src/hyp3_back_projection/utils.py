@@ -13,7 +13,6 @@ from shapely.geometry import Polygon, shape
 
 
 log = logging.getLogger(__name__)
-ESA_HOST = 'dataspace.copernicus.eu'
 EARTHDATA_HOST = 'urs.earthdata.nasa.gov'
 
 
