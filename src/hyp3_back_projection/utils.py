@@ -8,7 +8,7 @@ from typing import List, Optional, Tuple
 from zipfile import ZipFile
 
 import asf_search
-from hyp3lib.get_orb import downloadSentinelOrbitFile
+from s1_orbits import fetch_for_scene
 from shapely.geometry import Polygon, shape
 
 
@@ -95,26 +95,6 @@ def find_creds_in_netrc(service) -> Tuple[str, str]:
     return None, None
 
 
-def get_esa_credentials() -> Tuple[str, str]:
-    """Get ESA credentials from the environment or netrc file.
-
-    Returns:
-        Tuple of the ESA username and password
-    """
-    username, password = find_creds_in_env('ESA_USERNAME', 'ESA_PASSWORD')
-    if username and password:
-        return username, password
-
-    username, password = find_creds_in_netrc(ESA_HOST)
-    if username and password:
-        return username, password
-
-    raise ValueError(
-        'Please provide Copernicus Data Space Ecosystem (CDSE) credentials via the '
-        'ESA_USERNAME and ESA_PASSWORD environment variables, or your netrc file.'
-    )
-
-
 def get_earthdata_credentials() -> Tuple[str, str]:
     """Get NASA EarthData credentials from the environment or netrc file.
 
@@ -186,7 +166,7 @@ def download_orbit(granule_name: str, output_dir: Path) -> Path:
     Returns:
         Path to the downloaded orbit file
     """
-    orbit_path, _ = downloadSentinelOrbitFile(granule_name, str(output_dir), esa_credentials=get_esa_credentials())
+    orbit_path = str(fetch_for_scene(granule_name, str(output_dir)))
     return orbit_path
 
 
