@@ -40,8 +40,6 @@ For all workflows, the user must provide their Earthdata Login credentials in or
 
 If you do not already have an Earthdata account, you can sign up [here](https://urs.earthdata.nasa.gov/home).
 
-If you do not already have a CDSE account, you can sign up [here](https://dataspace.copernicus.eu).
-
 (`EARTHDATA_USERNAME`, `EARTHDATA_PASSWORD`), or via your `.netrc` file.
 
 If you haven't set up a `.netrc` file
