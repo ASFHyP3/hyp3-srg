@@ -22,6 +22,7 @@ classifiers=[
 dependencies = [
     "hyp3lib>=3,<4",
     "asf_search",
+    "s1_orbits",
 ]
 dynamic = ["version", "readme"]
 
