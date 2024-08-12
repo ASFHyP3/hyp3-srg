@@ -7,28 +7,28 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl git build-essential gfortran libfftw3-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN git clone -b main https://github.com/ASFHyP3/back-projection.git
-COPY . /hyp3-back-projection/
-COPY ./scripts/build_proc.sh ./back-projection
-RUN cd /back-projection && ./build_proc.sh && cd /
+RUN git clone -b main https://github.com/ASFHyP3/srg.git
+COPY . /hyp3-srg/
+COPY ./scripts/build_proc.sh ./srg
+RUN cd /srg && ./build_proc.sh && cd /
 
 FROM condaforge/mambaforge:latest as runner
 
 # For opencontainers label definitions, see:
 #    https://github.com/opencontainers/image-spec/blob/master/annotations.md
-LABEL org.opencontainers.image.title="HyP3 back-projection"
-LABEL org.opencontainers.image.description="HyP3 plugin for back-projection processing"
+LABEL org.opencontainers.image.title="HyP3 SRG"
+LABEL org.opencontainers.image.description="HyP3 plugin for Stanford Radar Group SAR processing"
 LABEL org.opencontainers.image.vendor="Alaska Satellite Facility"
 LABEL org.opencontainers.image.authors="ASF Tools Team <UAF-asf-apd@alaska.edu>"
 LABEL org.opencontainers.image.licenses="BSD-3-Clause"
-LABEL org.opencontainers.image.url="https://github.com/ASFHyP3/hyp3-back-projection"
-LABEL org.opencontainers.image.source="https://github.com/ASFHyP3/hyp3-back-projection"
+LABEL org.opencontainers.image.url="https://github.com/ASFHyP3/hyp3-srg"
+LABEL org.opencontainers.image.source="https://github.com/ASFHyP3/hyp3-srg"
 LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 ARG CONDA_UID=1000
 ARG CONDA_GID=1000
 
-ENV PROC_HOME=/back-projection
+ENV PROC_HOME=/srg
 ENV PYTHONDONTWRITEBYTECODE=true
 ENV MYHOME=/home/conda
 ENV DEBIAN_FRONTEND=noninteractive
@@ -47,14 +47,14 @@ SHELL ["/bin/bash", "-l", "-c"]
 USER ${CONDA_UID}
 WORKDIR /home/conda/
 
-COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /back-projection /back-projection
-COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /hyp3-back-projection /hyp3-back-projection
+COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /srg /srg
+COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /hyp3-srg /hyp3-srg
 
-RUN mamba env create -f /hyp3-back-projection/environment.yml && \
+RUN mamba env create -f /hyp3-srg/environment.yml && \
     conda clean -afy && \
-    conda activate hyp3-back-projection && \
-    sed -i 's/conda activate base/conda activate hyp3-back-projection/g' /home/conda/.profile && \
-    python -m pip install --no-cache-dir /hyp3-back-projection
+    conda activate hyp3-srg && \
+    sed -i 's/conda activate base/conda activate hyp3-srg/g' /home/conda/.profile && \
+    python -m pip install --no-cache-dir /hyp3-srg
 
-ENTRYPOINT ["/hyp3-back-projection/src/hyp3_back_projection/etc/entrypoint.sh"]
+ENTRYPOINT ["/hyp3-srg/src/hyp3_srg/etc/entrypoint.sh"]
 CMD ["-h"]

@@ -1,25 +1,25 @@
-# HyP3 back-projection
+# HyP3 SRG
 
-HyP3 plugin for back-projection processing
+HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 
 ## Usage
 > [!WARNING]
-> Running the workflows in this repository requires a compiled version of the [Stanford Radar Group Processor](https://github.com/asfhyp3/back-projection). For this reason, running this repository's workflows in a standard Python is not implemented yet. Instead, we recommend running the workflows from the docker container as outlined below.
+> Running the workflows in this repository requires a compiled version of the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). For this reason, running this repository's workflows in a standard Python is not implemented yet. Instead, we recommend running the workflows from the docker container as outlined below.
 
-The HyP3-back-projection plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/back-projection). The workflows currently included in this plugin are:
+The HyP3-SRG plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). The workflows currently included in this plugin are:
 
 - `back_projection`: A workflow for creating geocoded Sentinel-1 SLCs from Level-0 data using the [back-projection methodology](https://doi.org/10.1109/LGRS.2017.2753580).
 
 To run a workflow, you'll first need to build the docker container:
 ```bash
-docker build -t back-projection:latest .
+docker build -t hyp3-srg:latest .
 ```
 Then, run the docker container for your chosen workflow.
 ```bash
 docker run -it --rm \
     -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
     -e EARTHDATA_PASSWORD=[YOUR_PASSWORD_HERE] \
-    back-projection:latest \
+    hyp3-srg:latest \
     ++process [WORKFLOW_NAME] \
     [WORKFLOW_ARGS]
 ```
@@ -28,7 +28,7 @@ Here is an example command for the `back_projection` workflow:
 docker run -it --rm \
     -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
     -e EARTHDATA_PASSWORD=[YOUR_PASSWORD_HERE] \
-    back-projection:latest \
+    hyp3-srg:latest \
     ++process back_projection \
     S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42-RAW \
     S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
@@ -62,7 +62,7 @@ When running on an EC2 instance, the following setup is recommended:
     3. Use the [Ubuntu Deep Learning Base OSS Nvidia Driver GPU AMI](https://aws.amazon.com/releasenotes/aws-deep-learning-base-gpu-ami-ubuntu-22-04/) (no install script required).
 3. Build the GPU docker container with the correct compute capability version. To determine this value, run `nvidia-smi` on the instance to obtain GPU type, then cross-reference this information with NVIDIA's [GPU type compute capability list](https://developer.nvidia.com/cuda-gpus). For a g6.2xlarge instance, this would be:
 ```bash
-docker --build-arg="GPU_ARCH=89" -t back-projection:gpu-89 -f Dockerfile.gpu .
+docker --build-arg="GPU_ARCH=89" -t hyp3-srg:gpu-89 -f Dockerfile.gpu .
 ```
 The compute capability version will always be the same for a given instance type, so you will only need to look this up once per instance type.
 The default value for this argument is `89` - the correct value for g6.2xlarge instances.

@@ -5,7 +5,7 @@ from pathlib import Path
 import requests
 from shapely.geometry import Polygon
 
-from hyp3_back_projection import utils
+from hyp3_srg import utils
 
 
 log = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def ensure_egm_model_available():
                 f.write(chunk)
 
 
-def download_dem_for_back_projection(
+def download_dem_for_srg(
     footprint: Polygon,
     work_dir: Path,
 ) -> Path:

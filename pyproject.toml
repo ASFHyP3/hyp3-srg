@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hyp3_back_projection"
+name = "hyp3_srg"
 requires-python = ">=3.10"
 authors = [
     {name="ASF Tools Team", email="UAF-asf-apd@alaska.edu"},
 ]
-description = "HyP3 plugin for back-projection processing"
+description = "HyP3 plugin for Stanford Radar Group (SRG) SAR Processor"
 license = {text = "BSD-3-Clause"}
 classifiers=[
     "Intended Audience :: Science/Research",
@@ -38,11 +38,11 @@ develop = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ASFHyP3/hyp3-back-projection"
+Homepage = "https://github.com/ASFHyP3/hyp3-srg"
 Documentation = "https://hyp3-docs.asf.alaska.edu"
 
 [project.entry-points.hyp3]
-back_projection = "hyp3_back_projection.back_projection:main"
+back_projection = "hyp3_srg.back_projection:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
