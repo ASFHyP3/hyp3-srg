@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 
-from hyp3_back_projection import utils
+from hyp3_srg import utils
 
 
 def test_get_proc_home(tmp_path, monkeypatch):

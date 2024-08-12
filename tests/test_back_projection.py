@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from hyp3_back_projection import back_projection, utils
+from hyp3_srg import back_projection, utils
 
 
 def test_create_param_file(tmp_path):

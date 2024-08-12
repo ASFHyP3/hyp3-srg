@@ -1,4 +1,4 @@
-"""HyP3 plugin for back-projection processing"""
+"""HyP3 plugin for Stanford Radar Group (SRG) SAR Processor"""
 
 from importlib.metadata import version
 

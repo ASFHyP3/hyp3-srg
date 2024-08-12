@@ -3,16 +3,16 @@ from unittest import mock
 
 from shapely.geometry import box
 
-from hyp3_back_projection import dem, utils
+from hyp3_srg import dem, utils
 
 
-def test_download_dem_for_back_projection(monkeypatch):
+def test_download_dem_for_srg(monkeypatch):
     with monkeypatch.context() as m:
         mock_ensure_egm_model_available = mock.Mock()
         m.setattr(dem, 'ensure_egm_model_available', mock_ensure_egm_model_available)
         mock_call_stanford_module = mock.Mock()
         m.setattr(utils, 'call_stanford_module', mock_call_stanford_module)
-        dem.download_dem_for_back_projection(box(0, 1, 2, 3), Path.cwd())
+        dem.download_dem_for_srg(box(0, 1, 2, 3), Path.cwd())
         mock_ensure_egm_model_available.assert_called_once()
         mock_call_stanford_module.assert_called_once_with(
             'DEM/createDEMcop.py',
