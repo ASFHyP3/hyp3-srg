@@ -1,5 +1,5 @@
 """
-Standford Radar Group (SRG) Processor plugin for HyP3
+HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 """
 import argparse
 import sys
