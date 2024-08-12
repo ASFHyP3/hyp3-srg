@@ -1,6 +1,6 @@
 # HyP3 SRG
 
-HyP3 plugin for Stanford Radar Group (SRG) Processor SAR processing
+HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 
 ## Usage
 > [!WARNING]
