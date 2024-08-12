@@ -28,13 +28,7 @@ Here is an example command for the `back_projection` workflow:
 docker run -it --rm \
     -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
     -e EARTHDATA_PASSWORD=[YOUR_PASSWORD_HERE] \
-<<<<<<< HEAD
-    -e ESA_USERNAME=[YOUR_USERNAME_HERE] \
-    -e ESA_PASSWORD=[YOUR_PASSWORD_HERE] \
     hyp3-srg:latest \
-=======
-    back-projection:latest \
->>>>>>> develop
     ++process back_projection \
     S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42-RAW \
     S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
