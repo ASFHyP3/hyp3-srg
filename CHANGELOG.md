@@ -9,7 +9,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.7.0]
 
 ### Changed
-* Renamed repository and its components to HyP3-SRG to reflect that the processor we're using is the Stanford Radar Group (SRG) processor.
+* Renamed project to HyP3 SRG to reflect that it's a HyP3 plugin for the Stanford Radar Group (SRG) SAR Processor.
 
 ## [0.6.0]
 
