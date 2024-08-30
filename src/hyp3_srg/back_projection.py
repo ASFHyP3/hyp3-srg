@@ -87,9 +87,9 @@ def create_product(work_dir) -> Path:
 
     # We don't compress the data because SLC data is psuedo-random
     with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_STORED) as z:
-        z.write(gslc_path, gslc_path.name)
-        z.write(orbit_path, orbit_path.name)
-        z.write(parameter_file, parameter_file.name)
+        z.write(gslc_path, zip_path / gslc_path.name)
+        z.write(orbit_path, zip_path / orbit_path.name)
+        z.write(parameter_file, zip_path / parameter_file.name)
 
     return zip_path
 
@@ -122,7 +122,7 @@ def back_project(
     bboxs = []
     granule_orbit_pairs = []
     for granule in granules:
-        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir, unzip=True)
+        granule_path, granule_bbox = utils.download_raw_granule(granule, work_dir, unzip=true)
         orbit_path = utils.download_orbit(granule, work_dir)
         bboxs.append(granule_bbox)
         granule_orbit_pairs.append((granule_path, orbit_path))
