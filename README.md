@@ -6,10 +6,10 @@ HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 > [!WARNING]
 > Running the workflows in this repository requires a compiled version of the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). For this reason, running this repository's workflows in a standard Python is not implemented yet. Instead, we recommend running the workflows from the docker container as outlined below.
 
-The HyP3-SRG plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). The workflows currently included in this plugin are:
+The HyP3-SRG plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). This set of workflow uses the [SRG alogorithms]((https://doi.org/10.1109/LGRS.2017.2753580)) to process Level-0 Sentinel-1 (S1) data to geocoded, user-friendly products that can be used for time-series analysis. The workflows currently included in this plugin are:
 
-- `back_projection`: A workflow for creating geocoded Sentinel-1 SLCs from Level-0 data using the [back-projection methodology](https://doi.org/10.1109/LGRS.2017.2753580).
-- `timeseries`: A workflow for creating a deformation timeseries of geocoded Sentinel-1 SLCs from Level-0 data using the [time-series methodology](#TO DO: Add citation here ?https://doi.org/10.1109/JSTARS.2022.3216964). 
+- [`back_projection`](#back-projection): A workflow for creating geocoded Sentinel-1 SLCs,
+- [`timeseries`](#time-series-analysis): A workflow for creating a deformation timeseries of geocoded Sentinel-1 SLCs. 
 
 To run a workflow, you'll first need to build the docker container:
 ```bash
@@ -24,7 +24,10 @@ docker run -it --rm \
     ++process [WORKFLOW_NAME] \
     [WORKFLOW_ARGS]
 ```
-Here is an example command for the `back_projection` workflow:
+
+### Back-projection 
+The `back_projection` processing type produces geocoded SLCs for raw S1 data. The workflow takes a list of Level-0 S1 granule names and outputs them as geocoded SLCs (GSLCs).
+An example command for the `back_projection` workflow is:
 ```bash
 docker run -it --rm \
     -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
@@ -34,7 +37,11 @@ docker run -it --rm \
     S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42-RAW \
     S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
 ```
-Similary, an example command for the `timeseries` workflow is: 
+
+### Time-series
+The `timeseries` workflow takes a list of up to 50 Level-0 S1 granule names and produces a time-series of the respective geocoded SLCs. Stacks are created with looks `10x10`and baselines of `1000x1000`. A  trophospheric correction is applied using an elevation-dependent regression. 
+This workflow will output interferograms and time-series files for all input granules.
+ The following command will run the `timeseries` workflow: 
 ```
 docker run -it --rm \
     -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
@@ -45,7 +52,7 @@ docker run -it --rm \
    S1A_IW_RAW__0SDV_20240816T020812_20240816T020844_055232_06BB8A_C7CA \
    S1A_IW_RAW__0SDV_20240804T020812_20240804T020844_055057_06B527_1346
 ```
-## Earthdata Login
+### Earthdata Login
 
 For all workflows, the user must provide their Earthdata Login credentials in order to download input data.
 
@@ -56,7 +63,9 @@ Your credentials can be passed to the workflows via environment variables (`EART
 If you haven't set up a `.netrc` file
 before, check out this [guide](https://harmony.earthdata.nasa.gov/docs#getting-started) to get started.
 
-## GPU Setup:
+
+## Developer setup
+### GPU Setup
 In order for Docker to be able to use the host's GPU, the host must have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) installed and configured. 
 The process is different for different OS's and Linux distros. The setup process for the most common distros, including Ubuntu, 
 can be found [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuration). Make sure to follow the [Docker configuration steps](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuration) after installing the package.
