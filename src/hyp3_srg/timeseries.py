@@ -28,6 +28,18 @@ def timeseries(
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
     """
+
+    """
+    DONE: Get the BBOXs for the DEM.
+    DONE: Retrieve the SRG DEM files.
+    TODO: Default values for looks, baselines, tropo, and thresholds
+    TODO: Call merge_slcs.py if necessary
+    TODO: Create the SBAS list with sbas_list.py
+    TODO: Get the size of the .geo files from the .rsc file.
+    TODO: Form the interferograms.
+    TODO: ...
+    """
+
     if work_dir is None:
         work_dir = Path.cwd()
 
