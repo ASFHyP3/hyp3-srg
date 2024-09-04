@@ -18,19 +18,6 @@ from hyp3_srg import dem, utils
 log = logging.getLogger(__name__)
 
 
-def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
-    """Create a parameter file for the processor.
-
-    Args:
-        dem_path: Path to the DEM file
-        dem_rsc_path: Path to the DEM RSC file
-        output_dir: Directory to save the parameter file in
-    """
-    lines = [str(dem_path), str(dem_rsc_path)]
-    with open(output_dir / 'params', 'w') as f:
-        f.write('\n'.join(lines))
-
-
 def check_required_files(required_files: Iterable, work_dir: Path) -> None:
     for file in required_files:
         if not (work_dir / file).exists():
@@ -129,7 +116,7 @@ def back_project(
 
     full_bbox = unary_union(bboxs).buffer(0.1)
     dem_path = dem.download_dem_for_srg(full_bbox, work_dir)
-    create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
+    utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
     back_project_granules(granule_orbit_pairs, work_dir=work_dir, gpu=gpu)
 
