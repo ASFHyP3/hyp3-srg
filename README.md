@@ -9,6 +9,7 @@ HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 The HyP3-SRG plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). The workflows currently included in this plugin are:
 
 - `back_projection`: A workflow for creating geocoded Sentinel-1 SLCs from Level-0 data using the [back-projection methodology](https://doi.org/10.1109/LGRS.2017.2753580).
+- `timeseries`: A workflow for creating a deformation timeseries of geocoded Sentinel-1 SLCs from Level-0 data using the [time-series methodology](#TO DO: Add citation here ?https://doi.org/10.1109/JSTARS.2022.3216964). 
 
 To run a workflow, you'll first need to build the docker container:
 ```bash
@@ -33,7 +34,17 @@ docker run -it --rm \
     S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42-RAW \
     S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38-RAW
 ```
-
+Similary, an example command for the `timeseries` workflow is: 
+```
+docker run -it --rm \
+    -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
+    -e EARTHDATA_PASSWORD=[YOUR_PASSWORD_HERE] \
+    hyp3-srg:latest \
+    ++process timeseries \
+   S1A_IW_RAW__0SDV_20240828T020812_20240828T020844_055407_06C206_6EA7 \
+   S1A_IW_RAW__0SDV_20240816T020812_20240816T020844_055232_06BB8A_C7CA \
+   S1A_IW_RAW__0SDV_20240804T020812_20240804T020844_055057_06B527_1346
+```
 ## Earthdata Login
 
 For all workflows, the user must provide their Earthdata Login credentials in order to download input data.
