@@ -4,10 +4,13 @@ Sentinel-1 GSLC time series processing
 
 import argparse
 import logging
+import zipfile
+from os import mkdir
 from shutil import copyfile
 from pathlib import Path
 from typing import Iterable, Optional
 
+from hyp3lib.aws import upload_file_to_s3
 from shapely import unary_union
 
 from hyp3_srg import dem, utils
@@ -30,7 +33,7 @@ def get_size_from_dem(dem_file: str) -> tuple[int]:
         length_line = dem.readline()
         dem_length = length_line.split()[1]
 
-    return dem_width, dem_length
+    return int(dem_width), int(dem_length)
 
 
 def generate_wrapped_interferograms(
@@ -58,7 +61,10 @@ def generate_wrapped_interferograms(
     )
 
     sbas_args = [
-        'sbas_list ../elevation.dem.rsc 1 1',
+        'sbas_list', 
+        '../elevation.dem.rsc',
+        1,
+        1,
         dem_width,
         dem_length,
         looks_down,
@@ -83,12 +89,13 @@ def unwrap_interferograms(
     unw_width, unw_length = unw_shape
 
     reduce_dem_args = [
-        '../elevation.dem dem',
+        '../elevation.dem',
+        'dem',
         dem_width,
         dem_width // unw_width,
         dem_length // unw_length
     ]
-    utils.call_stanford_module('util/nbymi2.py', args=reduce_dem_args, work_dir=work_dir)
+    utils.call_stanford_module('util/nbymi2', args=reduce_dem_args, work_dir=work_dir)
     utils.call_stanford_module('util/unwrap_parallel.py', args=[unw_width], work_dir=work_dir)
 
 
@@ -106,20 +113,23 @@ def compute_sbas_velocity_solution(
         unw_shape: tuple containing the width and length from the dem.rsc file
         work_dir: the directory containing the wrapped interferograms
     """
-    utils.call_stanford_module('sbas/sbas_setup.py',  args=['sbas_list geolist'], work_dir=work_dir)
-    copyfile('./intlist', 'unwlist')
-    utils.call_stanford_module('util/sed.py', args=["'s/int/unw/g' unwlist"], work_dir=work_dir)
+    unw_width, unw_length = unw_shape
+
+    utils.call_stanford_module('sbas/sbas_setup.py',  args=['sbas_list', 'geolist'], work_dir=work_dir)
+    copyfile(work_dir / 'intlist', work_dir / 'unwlist')
+    utils.call_stanford_module('util/sed.py', args=['s/int/unw/g', 'unwlist'], work_dir=work_dir)
 
     num_unw_files = 0
     num_slcs = 0
-    with (open('unwlist', 'r'), open('geolist', 'r')) as (unw_list, slc_list):
+    with open(work_dir / 'unwlist', 'r') as unw_list:
         num_unw_files = len(unw_list.readlines())
+    with open(work_dir / 'geolist', 'r') as slc_list:
         num_slcs = len(slc_list.readlines())
 
     ref_point_args = [
         'unwlist',
-        unw_shape[0],
-        unw_shape[1],
+        unw_width,
+        unw_length,
         threshold
     ]
     utils.call_stanford_module('int/findrefpoints', args=ref_point_args, work_dir=work_dir)
@@ -127,20 +137,19 @@ def compute_sbas_velocity_solution(
     if do_tropo_correction:
         tropo_correct_args = [
             'unwlist',
-            unw_shape[0],
-            unw_shape[1]
+            unw_width,
+            unw_length
         ]
         utils.call_stanford_module('int/tropocorrect.py', args=tropo_correct_args, work_dir=work_dir)
 
     sbas_velocity_args = [
         'unwlist',
-        str(num_unw_files.decode()).rstrip(),
-        str(num_slcs.decode()).rstrip(),
-        unw_shape[0],
+        num_unw_files,
+        num_slcs,
+        unw_width,
         'ref_locs'
     ]
     utils.call_stanford_module('sbas/sbas', args=sbas_velocity_args, work_dir=work_dir)
-
 
 
 def create_time_series(
@@ -159,11 +168,20 @@ def create_time_series(
         do_tropo_correction: ...
         work_dir: the directory containing the GSLCs to do work in
     """
-    dem_shape = get_size_from_dem('../elevation.dem.rsc')
-    generate_wrapped_interferograms(looks=looks, baselines=baselines, dem_shape=dem_shape)
+    dem_shape = get_size_from_dem('elevation.dem.rsc')
+    generate_wrapped_interferograms(
+        looks=looks,
+        baselines=baselines,
+        dem_shape=dem_shape,
+        work_dir=work_dir
+    )
 
-    unw_shape = get_size_from_dem('../dem.rsc')
-    unwrap_interferograms(dem_shape=dem_shape, unw_shape=unw_shape)
+    unw_shape = get_size_from_dem(work_dir / 'dem.rsc')
+    unwrap_interferograms(
+        dem_shape=dem_shape,
+        unw_shape=unw_shape,
+        work_dir=work_dir
+    )
 
     compute_sbas_velocity_solution(
         threshold=threshold,
@@ -171,6 +189,34 @@ def create_time_series(
         unw_shape=unw_shape,
         work_dir=work_dir
     )
+
+
+# TODO: Package the time series files
+def package_time_series(work_dir) -> Path:
+    """Package the time series into a product zip file.
+
+    Args:
+        work_dir: Working directory for completed back-projection run
+
+    Returns:
+        Path to the created zip file
+    """
+    gslc_path = list(work_dir.glob('S1*.geo'))[0]
+    product_name = gslc_path.with_suffix('').name
+    zip_path = work_dir / f'{product_name}.zip'
+
+    parameter_file = work_dir / f'{product_name}.txt'
+    input_granules = [x.with_suffix('').name for x in work_dir.glob('S1*.SAFE')]
+    with open(parameter_file, 'w') as f:
+        f.write('Process: time-series\n')
+        f.write(f"Input Granules: {', '.join(input_granules)}\n")
+
+    # We don't compress the data because SLC data is psuedo-random
+    with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_STORED) as z:
+        z.write(gslc_path, gslc_path.name)
+        z.write(parameter_file, parameter_file.name)
+
+    return zip_path
 
 
 def time_series(
@@ -189,27 +235,37 @@ def time_series(
     """
     if work_dir is None:
         work_dir = Path.cwd()
+    sbas_dir = work_dir / 'sbas'
+    if not sbas_dir.exists():
+        mkdir(sbas_dir)
 
     bboxs = []
     for granule in granules:
         bboxs.append(utils.get_bbox(granule))
-
     full_bbox = unary_union(bboxs).buffer(0.1)
+
     dem_path = dem.download_dem_for_srg(full_bbox, work_dir)
+
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
-    create_time_series(work_dir=work_dir)
+    create_time_series(work_dir=sbas_dir)
+
+    zip_path = package_time_series(work_dir)
+    if bucket:
+        upload_file_to_s3(zip_path, bucket, bucket_prefix)
+
+    print(f'Finished time-series processing for {list(sbas_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
 
 
 def main():
     """Entrypoint for the GSLC time series workflow.
 
     Example command:
-    python -m hyp3_srg ++process timeseries \
-        S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42 \
-        S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38
+    python -m hyp3_srg ++process time_series \
+        S1A_IW_RAW__0SDV_20231229T134339_20231229T134411_051870_064437_4F42.geo \
+        S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38.geo
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
