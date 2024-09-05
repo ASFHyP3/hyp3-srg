@@ -4,7 +4,7 @@ Sentinel-1 GSLC timeseries interferogram processing
 
 import argparse
 import logging
-from os import cp
+from shutil import copyfile
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -108,7 +108,7 @@ def compute_sbas_velocity_solution(
         work_dir: the directory containing the wrapped interferograms
     """
     utils.call_stanford_module('sbas/sbas_setup.py',  args=['sbas_list geolist'], work_dir=work_dir)
-    cp('./intlist', 'unwlist')
+    copyfile('./intlist', 'unwlist')
     utils.call_stanford_module('util/sed.py', args=["'s/int/unw/g' unwlist"], work_dir=work_dir)
 
     num_unw_files = 0
