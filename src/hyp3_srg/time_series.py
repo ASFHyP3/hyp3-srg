@@ -24,12 +24,11 @@ def get_size_from_dem(dem_file: str) -> tuple[int]:
     Returns:
         dem_width, dem_length: tuple containing the dem width and dem length
     """
-    fe = open(dem_file,'r')
-    width_line = fe.readline()
-    dem_width = width_line.split()[1]
-    length_line = fe.readline()
-    dem_length = length_line.split()[1]
-    fe.close()
+    with open(dem_file) as dem:
+        width_line = dem.readline()
+        dem_width = width_line.split()[1]
+        length_line = dem.readline()
+        dem_length = length_line.split()[1]
 
     return dem_width, dem_length
 
