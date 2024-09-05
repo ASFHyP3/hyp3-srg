@@ -144,14 +144,14 @@ def compute_sbas_velocity_solution(
 
 
 
-def create_timeseries(
+def create_time_series(
     looks: tuple[int] = (10, 10),
     baselines: tuple[int] = (1000, 1000),
     threshold: float = 0.5,
     do_tropo_correction: bool = True,
     work_dir: Path | None = None
 ) -> None:
-    """ Creates a timeseries from a stack of GSLCs consisting of interferograms and a velocity solution 
+    """ Creates a time series from a stack of GSLCs consisting of interferograms and a velocity solution 
 
     Args:
         looks: tuple containing the number range looks and azimuth looks
@@ -174,13 +174,13 @@ def create_timeseries(
     )
 
 
-def timeseries(
+def time_series(
     granules: Iterable[str],
     bucket: str = None,
     bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
 ):
-    """Create and package a timeseries stack from a set of Sentinel-1 GSLCs.
+    """Create and package a time series stack from a set of Sentinel-1 GSLCs.
 
     Args:
         granules: List of Sentinel-1 GSLCs
@@ -201,7 +201,7 @@ def timeseries(
 
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
-    create_timeseries(work_dir=work_dir)
+    create_time_series(work_dir=work_dir)
 
 
 
@@ -219,7 +219,7 @@ def main():
     parser.add_argument('granules', type=str.split, nargs='+', help='GSLC granules.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
-    timeseries(**args.__dict__)
+    time_series(**args.__dict__)
 
 
 if __name__ == '__main__':
