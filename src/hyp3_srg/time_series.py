@@ -178,7 +178,7 @@ def time_series(
     bucket: str = None,
     bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
-):
+) -> None:
     """Create and package a time series stack from a set of Sentinel-1 GSLCs.
 
     Args:
@@ -201,7 +201,6 @@ def time_series(
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
     create_time_series(work_dir=work_dir)
-
 
 
 def main():
