@@ -1,5 +1,5 @@
 """
-Sentinel-1 GSLC timeseries interferogram processing
+Sentinel-1 GSLC time series processing
 """
 
 import argparse
@@ -206,7 +206,7 @@ def time_series(
 
 
 def main():
-    """Timeseries entrypoint.
+    """Entrypoint for the GSLC time series workflow.
 
     Example command:
     python -m hyp3_srg ++process timeseries \
