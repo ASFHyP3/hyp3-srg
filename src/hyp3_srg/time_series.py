@@ -211,7 +211,7 @@ def package_time_series(work_dir: Optional[Path] = None) -> Path:
         # Metadata
         'sbas_list',
         'parameters',
-        'reflocs',
+        'ref_locs',
         'dem.rsc',
         # Datasets
         'dem',
