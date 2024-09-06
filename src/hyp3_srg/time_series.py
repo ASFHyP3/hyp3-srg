@@ -189,8 +189,7 @@ def create_time_series(
     )
 
 
-# TODO: Package the time series files
-def package_time_series(work_dir) -> Path:
+def package_time_series(work_dir: Optional[Path] = None) -> Path:
     """Package the time series into a product zip file.
 
     Args:
@@ -199,21 +198,32 @@ def package_time_series(work_dir) -> Path:
     Returns:
         Path to the created zip file
     """
-    gslc_path = list(work_dir.glob('S1*.geo'))[0]
-    product_name = gslc_path.with_suffix('').name
+    if work_dir is None:
+        work_dir = Path.cwd()
+    sbas_dir = work_dir / 'sbas'
+    # TODO: create name based on input granules
+    product_name = 'time_series'
+    product_path = work_dir / product_name
+    product_path.mkdir(exist_ok=True, parents=True)
     zip_path = work_dir / f'{product_name}.zip'
 
-    parameter_file = work_dir / f'{product_name}.txt'
-    input_granules = [x.with_suffix('').name for x in work_dir.glob('S1*.SAFE')]
-    with open(parameter_file, 'w') as f:
-        f.write('Process: time-series\n')
-        f.write(f"Input Granules: {', '.join(input_granules)}\n")
-
-    # We don't compress the data because SLC data is psuedo-random
-    with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_STORED) as z:
-        z.write(gslc_path, gslc_path.name)
-        z.write(parameter_file, parameter_file.name)
-
+    to_keep = [
+        # Metadata
+        'sbas_list',
+        'parameters',
+        'reflocs',
+        'dem.rsc',
+        # Datasets
+        'dem',
+        'locs',
+        'npts',
+        'displacement',
+        'stackmht',
+        'stacktime',
+        'velocity',
+    ]
+    [shutil.copy(sbas_dir / f, product_path / f) for f in to_keep]
+    shutil.make_archive(product_path, 'zip', product_path)
     return zip_path
 
 
