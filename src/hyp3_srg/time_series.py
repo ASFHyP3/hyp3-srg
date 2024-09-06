@@ -6,8 +6,8 @@ import argparse
 import logging
 import zipfile
 from os import mkdir
-from shutil import copyfile
 from pathlib import Path
+from shutil import copyfile
 from typing import Iterable, Optional
 
 from hyp3lib.aws import upload_file_to_s3
@@ -15,11 +15,12 @@ from shapely import unary_union
 
 from hyp3_srg import dem, utils
 
+
 log = logging.getLogger(__name__)
 
 
 def get_size_from_dem(dem_file: str) -> tuple[int]:
-    """ Get the length and width from a .rsc DEM file
+    """Get the length and width from a .rsc DEM file
 
     Args:
         dem_file: path to the .rsc dem file.
@@ -37,12 +38,9 @@ def get_size_from_dem(dem_file: str) -> tuple[int]:
 
 
 def generate_wrapped_interferograms(
-    looks: tuple[int],
-    baselines: tuple[int],
-    dem_shape: tuple[int],
-    work_dir: Path
+    looks: tuple[int], baselines: tuple[int], dem_shape: tuple[int], work_dir: Path
 ) -> None:
-    """ Generates wrapped interferograms from GSLCs
+    """Generates wrapped interferograms from GSLCs
 
     Args:
         looks: tuple containing the number range looks and azimuth looks
@@ -54,31 +52,14 @@ def generate_wrapped_interferograms(
     looks_down, looks_across = looks
     time_baseline, spatial_baseline = baselines
 
-    utils.call_stanford_module(
-        'sentinel/sbas_list.py',
-        args=[time_baseline, spatial_baseline],
-        work_dir=work_dir
-    )
+    utils.call_stanford_module('sentinel/sbas_list.py', args=[time_baseline, spatial_baseline], work_dir=work_dir)
 
-    sbas_args = [
-        'sbas_list', 
-        '../elevation.dem.rsc',
-        1,
-        1,
-        dem_width,
-        dem_length,
-        looks_down,
-        looks_across
-    ]
+    sbas_args = ['sbas_list', '../elevation.dem.rsc', 1, 1, dem_width, dem_length, looks_down, looks_across]
     utils.call_stanford_module('sentinel/ps_sbas_igrams.py', args=sbas_args, work_dir=work_dir)
 
 
-def unwrap_interferograms(
-    dem_shape: tuple[int],
-    unw_shape: tuple[int],
-    work_dir: Path
-) -> None:
-    """ Unwraps wrapped interferograms in parallel
+def unwrap_interferograms(dem_shape: tuple[int], unw_shape: tuple[int], work_dir: Path) -> None:
+    """Unwraps wrapped interferograms in parallel
 
     Args:
         dem_shape: tuple containing the dem width and dem length
@@ -88,24 +69,15 @@ def unwrap_interferograms(
     dem_width, dem_length = dem_shape
     unw_width, unw_length = unw_shape
 
-    reduce_dem_args = [
-        '../elevation.dem',
-        'dem',
-        dem_width,
-        dem_width // unw_width,
-        dem_length // unw_length
-    ]
+    reduce_dem_args = ['../elevation.dem', 'dem', dem_width, dem_width // unw_width, dem_length // unw_length]
     utils.call_stanford_module('util/nbymi2', args=reduce_dem_args, work_dir=work_dir)
     utils.call_stanford_module('util/unwrap_parallel.py', args=[unw_width], work_dir=work_dir)
 
 
 def compute_sbas_velocity_solution(
-    threshold: float,
-    do_tropo_correction: bool,
-    unw_shape: tuple[int],
-    work_dir: Path
+    threshold: float, do_tropo_correction: bool, unw_shape: tuple[int], work_dir: Path
 ) -> None:
-    """ Computes the sbas velocity solution from the unwrapped interferograms
+    """Computes the sbas velocity solution from the unwrapped interferograms
 
     Args:
         threshold: ...
@@ -115,7 +87,7 @@ def compute_sbas_velocity_solution(
     """
     unw_width, unw_length = unw_shape
 
-    utils.call_stanford_module('sbas/sbas_setup.py',  args=['sbas_list', 'geolist'], work_dir=work_dir)
+    utils.call_stanford_module('sbas/sbas_setup.py', args=['sbas_list', 'geolist'], work_dir=work_dir)
     copyfile(work_dir / 'intlist', work_dir / 'unwlist')
     utils.call_stanford_module('util/sed.py', args=['s/int/unw/g', 'unwlist'], work_dir=work_dir)
 
@@ -126,29 +98,14 @@ def compute_sbas_velocity_solution(
     with open(work_dir / 'geolist', 'r') as slc_list:
         num_slcs = len(slc_list.readlines())
 
-    ref_point_args = [
-        'unwlist',
-        unw_width,
-        unw_length,
-        threshold
-    ]
+    ref_point_args = ['unwlist', unw_width, unw_length, threshold]
     utils.call_stanford_module('int/findrefpoints', args=ref_point_args, work_dir=work_dir)
 
     if do_tropo_correction:
-        tropo_correct_args = [
-            'unwlist',
-            unw_width,
-            unw_length
-        ]
+        tropo_correct_args = ['unwlist', unw_width, unw_length]
         utils.call_stanford_module('int/tropocorrect.py', args=tropo_correct_args, work_dir=work_dir)
 
-    sbas_velocity_args = [
-        'unwlist',
-        num_unw_files,
-        num_slcs,
-        unw_width,
-        'ref_locs'
-    ]
+    sbas_velocity_args = ['unwlist', num_unw_files, num_slcs, unw_width, 'ref_locs']
     utils.call_stanford_module('sbas/sbas', args=sbas_velocity_args, work_dir=work_dir)
 
 
@@ -157,9 +114,9 @@ def create_time_series(
     baselines: tuple[int] = (1000, 1000),
     threshold: float = 0.5,
     do_tropo_correction: bool = True,
-    work_dir: Path | None = None
+    work_dir: Path | None = None,
 ) -> None:
-    """ Creates a time series from a stack of GSLCs consisting of interferograms and a velocity solution 
+    """Creates a time series from a stack of GSLCs consisting of interferograms and a velocity solution
 
     Args:
         looks: tuple containing the number range looks and azimuth looks
@@ -169,25 +126,13 @@ def create_time_series(
         work_dir: the directory containing the GSLCs to do work in
     """
     dem_shape = get_size_from_dem('elevation.dem.rsc')
-    generate_wrapped_interferograms(
-        looks=looks,
-        baselines=baselines,
-        dem_shape=dem_shape,
-        work_dir=work_dir
-    )
+    generate_wrapped_interferograms(looks=looks, baselines=baselines, dem_shape=dem_shape, work_dir=work_dir)
 
     unw_shape = get_size_from_dem(work_dir / 'dem.rsc')
-    unwrap_interferograms(
-        dem_shape=dem_shape,
-        unw_shape=unw_shape,
-        work_dir=work_dir
-    )
+    unwrap_interferograms(dem_shape=dem_shape, unw_shape=unw_shape, work_dir=work_dir)
 
     compute_sbas_velocity_solution(
-        threshold=threshold,
-        do_tropo_correction=do_tropo_correction,
-        unw_shape=unw_shape,
-        work_dir=work_dir
+        threshold=threshold, do_tropo_correction=do_tropo_correction, unw_shape=unw_shape, work_dir=work_dir
     )
 
 
