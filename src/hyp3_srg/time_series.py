@@ -5,7 +5,6 @@ Sentinel-1 GSLC time series processing
 import argparse
 import logging
 import shutil
-import zipfile
 from os import mkdir
 from pathlib import Path
 from shutil import copyfile
