@@ -40,17 +40,22 @@ def download_from_s3(uri: str, dest_dir: Optional[Path] = None) -> None:
     return out_path
 
 
-def load_products(uris: Iterable[str]):
+def load_products(uris: Iterable[str], overwrite: bool = False):
     """Load the products from the provided URIs
 
     Args:
         uris: list of URIs to the SRG GSLC products
+        overwrite: overwrite existing products
     """
     work_dir = Path.cwd()
+    granule_names = []
     for uri in uris:
         name = Path(Path(uri).name)
+        geo_name = name.with_suffix('.geo')
+        zip_name = name.with_suffix('.zip')
 
-        if name.with_suffix('.zip').exists() or name.with_suffix('.geo').exists():
+        product_exists = geo_name.exists() or zip_name.exists()
+        if product_exists and not overwrite:
             pass
         elif uri.startswith('s3'):
             download_from_s3(uri, dest_dir=work_dir)
@@ -59,8 +64,12 @@ def load_products(uris: Iterable[str]):
         elif len(Path(uri).parts) > 1:
             shutil.copy(uri, work_dir)
 
-        if not name.with_suffix('.geo').exists():
+        if not geo_name.exists():
             shutil.unpack_archive(name.with_suffix('.zip'), work_dir)
+
+        granule_names.append(str(name))
+
+    return granule_names
 
 
 def get_size_from_dem(dem_file: str) -> tuple[int]:
@@ -228,11 +237,12 @@ def time_series(
     if not sbas_dir.exists():
         mkdir(sbas_dir)
 
-    load_products(granules)
+    granule_names = load_products(granules)
 
     bboxs = []
-    for granule in granules:
-        bboxs.append(utils.get_bbox(granule))
+    for name in granule_names:
+        # TODO: This may not work for a GSLC product created using multiple L0 granules
+        bboxs.append(utils.get_bbox(name))
     full_bbox = unary_union(bboxs).buffer(0.1)
 
     dem_path = dem.download_dem_for_srg(full_bbox, work_dir)
@@ -247,7 +257,7 @@ def time_series(
     if bucket:
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
-    print(f'Finished time-series processing for {list(work_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
+    print(f'Finished time-series processing for {", ".join(granule_names)}!')
 
 
 def main():
