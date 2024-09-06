@@ -77,7 +77,7 @@ def create_product(work_dir) -> Path:
     gslc_path = list(work_dir.glob('S1*.geo'))[0]
     product_name = gslc_path.with_suffix('').name
     orbit_path = work_dir / f'{product_name}.orbtiming'
-    rsc_path = work_dir / f'elevation.dem.rsc'
+    rsc_path = work_dir / 'elevation.dem.rsc'
     zip_path = work_dir / f'{product_name}.zip'
 
     parameter_file = work_dir / f'{product_name}.txt'
