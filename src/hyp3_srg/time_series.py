@@ -4,19 +4,63 @@ Sentinel-1 GSLC time series processing
 
 import argparse
 import logging
+import shutil
 import zipfile
 from os import mkdir
 from pathlib import Path
 from shutil import copyfile
 from typing import Iterable, Optional
 
+from boto3 import client
 from hyp3lib.aws import upload_file_to_s3
+from hyp3lib.fetch import download_file as download_from_http
 from shapely import unary_union
 
 from hyp3_srg import dem, utils
 
 
+S3 = client('s3')
 log = logging.getLogger(__name__)
+
+
+def download_from_s3(uri: str, dest_dir: Optional[Path] = None) -> None:
+    """Download a file from an S3 bucket
+
+    Args:
+        uri: URI of the file to download
+    """
+    if dest_dir is None:
+        dest_dir = Path.cwd()
+
+    simple_s3_uri = Path(uri.replace('s3://', ''))
+    bucket = simple_s3_uri.parts[0]
+    key = '/'.join(simple_s3_uri.parts[1:])
+    out_path = dest_dir / simple_s3_uri.parts[-1]
+    S3.download_file(bucket, key, out_path)
+    return out_path
+
+
+def load_products(uris: Iterable[str]):
+    """Load the products from the provided URIs
+
+    Args:
+        uris: list of URIs to the SRG GSLC products
+    """
+    work_dir = Path.cwd()
+    for uri in uris:
+        name = Path(Path(uri).name)
+
+        if name.with_suffix('.zip').exists() or name.with_suffix('.geo').exists():
+            pass
+        elif uri.startswith('s3'):
+            download_from_s3(uri, dest_dir=work_dir)
+        elif uri.startswith('http'):
+            download_from_http(uri, directory=work_dir)
+        elif len(Path(uri).parts) > 1:
+            shutil.copy(uri, work_dir)
+
+        if not name.with_suffix('.geo').exists():
+            shutil.unpack_archive(name.with_suffix('.zip'), work_dir)
 
 
 def get_size_from_dem(dem_file: str) -> tuple[int]:
@@ -184,6 +228,8 @@ def time_series(
     if not sbas_dir.exists():
         mkdir(sbas_dir)
 
+    load_products(granules)
+
     bboxs = []
     for granule in granules:
         bboxs.append(utils.get_bbox(granule))
@@ -201,7 +247,7 @@ def time_series(
     if bucket:
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
-    print(f'Finished time-series processing for {list(sbas_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
+    print(f'Finished time-series processing for {list(work_dir.glob("S1*.geo"))[0].with_suffix("").name}!')
 
 
 def main():
