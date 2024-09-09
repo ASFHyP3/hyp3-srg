@@ -9,7 +9,7 @@ HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 The HyP3-SRG plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). This set of workflow uses the [SRG alogorithms]((https://doi.org/10.1109/LGRS.2017.2753580)) to process Level-0 Sentinel-1 (S1) data to geocoded, user-friendly products that can be used for time-series analysis. The workflows currently included in this plugin are:
 
 - [`back_projection`](#back-projection): A workflow for creating geocoded Sentinel-1 SLCs,
-- [`timeseries`](#time-series-analysis): A workflow for creating a deformation timeseries of geocoded Sentinel-1 SLCs. 
+- [`time_series`](#time-series): A workflow for creating a deformation timeseries of geocoded Sentinel-1 SLCs. 
 
 To run a workflow, you'll first need to build the docker container:
 ```bash
@@ -39,15 +39,15 @@ docker run -it --rm \
 ```
 
 ### Time-series
-The `timeseries` workflow takes a list of up to 50 Level-0 S1 granule names and produces a time-series of the respective geocoded SLCs. Stacks are created with looks `10x10`and baselines of `1000x1000`. A  trophospheric correction is applied using an elevation-dependent regression. 
+The `time_series` workflow takes a list of up to 50 Level-0 S1 granule names and produces a time-series of the respective geocoded SLCs. Stacks are created with looks `10x10`and baselines of `1000x1000`. A  trophospheric correction is applied using an elevation-dependent regression. 
 This workflow will output interferograms and time-series files for all input granules.
- The following command will run the `timeseries` workflow: 
+ The following command will run the `time_series` workflow: 
 ```
 docker run -it --rm \
     -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
     -e EARTHDATA_PASSWORD=[YOUR_PASSWORD_HERE] \
     hyp3-srg:latest \
-    ++process timeseries \
+    ++process time_series \
    S1A_IW_RAW__0SDV_20240828T020812_20240828T020844_055407_06C206_6EA7 \
    S1A_IW_RAW__0SDV_20240816T020812_20240816T020844_055232_06BB8A_C7CA \
    S1A_IW_RAW__0SDV_20240804T020812_20240804T020844_055057_06B527_1346
