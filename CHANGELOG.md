@@ -9,7 +9,8 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.8.0]
 
 ### Added
-* Added `time_series` workflow for time series processing of GSLC stacks.
+* `time_series` workflow for time series processing of GSLC stacks.
+* The back-projection product now includes the elevation.dem.rsc file.
 
 ## [0.7.0]
 
@@ -79,4 +80,3 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 * Initial version of repository.
-
