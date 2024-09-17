@@ -247,17 +247,10 @@ def time_series(
         mkdir(sbas_dir)
 
     granule_names = load_products(granules)
-
-    bboxs = []
-    for name in granule_names:
-        # TODO: This may not work for a GSLC product created using multiple L0 granules
-        bboxs.append(utils.get_bbox(name))
-    full_bbox = unary_union(bboxs).buffer(0.1)
-
-    dem_path = dem.download_dem_for_srg(full_bbox, work_dir)
+    bbox = utils.get_bbox(granule_names[0]).buffer(0.1)
+    dem_path = dem.download_dem_for_srg(bbox, work_dir)
 
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
-
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
     create_time_series(work_dir=sbas_dir)
