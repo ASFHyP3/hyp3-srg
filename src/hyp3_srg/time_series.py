@@ -7,14 +7,14 @@ import logging
 import shutil
 from os import mkdir
 from pathlib import Path
+from secrets import token_hex
 from shutil import copyfile
 from typing import Iterable, Optional
 
 from boto3 import client
 from hyp3lib.aws import upload_file_to_s3
 from hyp3lib.fetch import download_file as download_from_http
-from shapely import unary_union
-
+from shapely.geometry import Polygon
 from hyp3_srg import dem, utils
 
 
@@ -188,7 +188,54 @@ def create_time_series(
     )
 
 
-def package_time_series(work_dir: Optional[Path] = None) -> Path:
+def create_time_series_product_name(
+    granule_names: list[str],
+    bbox: Polygon,
+):
+    prefix = "S1_SRG_SBAS"
+    split_names = [granule.split("_") for granule in granule_names]
+
+    absolute_orbit = split_names[0][7]
+    if split_names[0][0] == "S1A":
+        relative_orbit = str(((int(absolute_orbit) - 73) % 175) + 1)
+    else:
+        relative_orbit = str(((int(absolute_orbit) - 27) % 175) + 1)
+
+    start_dates = sorted([name[5] for name in split_names])
+    earliest_granule = start_dates[0]
+    latest_granule = start_dates[-1]
+
+    lons, lats = bbox.exterior.coords.xy
+
+    def lat_string(lat):
+        return ('N' if lat >= 0 else 'S') + f"{('%.1f' % abs(lat)).zfill(4)}".replace('.', '_')
+
+    def lon_string(lon):
+        return ('E' if lon >= 0 else 'W') + f"{('%.1f' % abs(lon)).zfill(5)}".replace('.', '_')
+
+    lat_lims = [lat_string(lat) for lat in [min(lats), max(lats)]]
+    lon_lims = [lon_string(lon) for lon in [min(lons), max(lons)]]
+
+    product_id = token_hex(2).upper()
+
+    return '_'.join([
+        prefix,
+        relative_orbit,
+        lon_lims[0],
+        lat_lims[0],
+        lon_lims[1],
+        lat_lims[1],
+        earliest_granule,
+        latest_granule,
+        product_id
+    ])
+
+
+def package_time_series(
+        granules: list[str],
+        bbox: Polygon,
+        work_dir: Optional[Path] = None
+) -> Path:
     """Package the time series into a product zip file.
 
     Args:
@@ -200,8 +247,7 @@ def package_time_series(work_dir: Optional[Path] = None) -> Path:
     if work_dir is None:
         work_dir = Path.cwd()
     sbas_dir = work_dir / 'sbas'
-    # TODO: create name based on input granules
-    product_name = 'time_series'
+    product_name = create_time_series_product_name(granules, bbox)
     product_path = work_dir / product_name
     product_path.mkdir(exist_ok=True, parents=True)
     zip_path = work_dir / f'{product_name}.zip'
