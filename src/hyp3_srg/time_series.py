@@ -15,6 +15,7 @@ from boto3 import client
 from hyp3lib.aws import upload_file_to_s3
 from hyp3lib.fetch import download_file as download_from_http
 from shapely.geometry import Polygon
+
 from hyp3_srg import dem, utils
 
 
