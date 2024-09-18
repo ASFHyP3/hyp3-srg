@@ -41,24 +41,28 @@ def download_dem_for_srg(
     Returns:
         The path to the downloaded DEM
     """
-    dem_path = work_dir / 'elevation.dem'
-    dem_rsc = work_dir / 'elevation.dem.rsc'
-
-    ensure_egm_model_available()
-
-    # bounds produces min x, min y, max x, max y; stanford wants toplat, botlat, leftlon, rightlon
     stanford_bounds = [footprint.bounds[i] for i in [3, 1, 0, 2]]
-    args = [str(dem_path), str(dem_rsc), *stanford_bounds]
-    utils.call_stanford_module('DEM/createDEMcop.py', args, work_dir=work_dir)
-    return dem_path
+    return download_dem_from_bounds(stanford_bounds, work_dir)
 
 
 def download_dem_from_bounds(bounds: list[float], work_dir: Optional[Path]):
+    """Download the DEM for the given stanford bounds.
+
+    Args:
+        footprint: The footprint to download a DEM for
+        work_dir: The directory to save create the DEM in
+
+    Returns:
+        The path to the downloaded DEM
+    """
     if (bounds[0] <= bounds[1] or bounds[2] >= bounds[3]):
         raise ValueError("Improper bounding box formatting, should be [max latitude, min latitude, min longitude, max longitude].")
 
     dem_path = work_dir / 'elevation.dem'
     dem_rsc = work_dir / 'elevation.dem.rsc'
+
+    with open(work_dir / 'bounds', 'w') as bounds_file:
+        bounds_file.write(' '.join([str(bound) for bound in bounds]))
 
     ensure_egm_model_available()
 
