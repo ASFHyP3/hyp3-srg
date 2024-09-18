@@ -83,6 +83,7 @@ def create_product(work_dir) -> Path:
 
 def back_project(
     granules: Iterable[str],
+    bounds: list[float] = None,
     earthdata_username: str = None,
     earthdata_password: str = None,
     bucket: str = None,
@@ -113,9 +114,11 @@ def back_project(
         orbit_path = utils.download_orbit(granule, work_dir)
         bboxs.append(granule_bbox)
         granule_orbit_pairs.append((granule_path, orbit_path))
-
-    full_bbox = unary_union(bboxs).buffer(0.1)
-    dem_path = dem.download_dem_for_srg(full_bbox, work_dir)
+    if bounds == None:
+        full_bbox = unary_union(bboxs).buffer(0.1)
+        dem_path = dem.download_dem_for_srg(full_bbox, work_dir)
+    else:
+        dem_path = dem.download_dem_from_bounds(bounds, work_dir)
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
     back_project_granules(granule_orbit_pairs, work_dir=work_dir, gpu=gpu)
@@ -143,6 +146,7 @@ def main():
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
+    parser.add_argument('--bounds', default=None, help='Bounds for DEM (max lat, min lat, min lon, max lon)')
     parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
