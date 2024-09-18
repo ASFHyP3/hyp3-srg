@@ -65,6 +65,7 @@ def create_product(work_dir) -> Path:
     product_name = gslc_path.with_suffix('').name
     orbit_path = work_dir / f'{product_name}.orbtiming'
     rsc_path = work_dir / 'elevation.dem.rsc'
+    bounds_path = work_dir / 'bounds'
     zip_path = work_dir / f'{product_name}.zip'
 
     parameter_file = work_dir / f'{product_name}.txt'
@@ -78,6 +79,7 @@ def create_product(work_dir) -> Path:
         z.write(gslc_path, gslc_path.name)
         z.write(orbit_path, orbit_path.name)
         z.write(rsc_path, rsc_path.name)
+        z.write(bounds_path, bounds_path.name)
         z.write(parameter_file, parameter_file.name)
 
     return zip_path
@@ -148,7 +150,7 @@ def main():
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
-    parser.add_argument('--bounds', default=None, help='Bounds for DEM (max lat, min lat, min lon, max lon)')
+    parser.add_argument('--bounds', default=None, type=float, nargs=4, help='Bounds for DEM (max lat, min lat, min lon, max lon)')
     parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
