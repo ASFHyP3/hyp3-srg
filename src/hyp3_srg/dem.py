@@ -56,7 +56,9 @@ def download_dem_from_bounds(bounds: list[float], work_dir: Optional[Path]):
         The path to the downloaded DEM
     """
     if (bounds[0] <= bounds[1] or bounds[2] >= bounds[3]):
-        raise ValueError("Improper bounding box formatting, should be [max latitude, min latitude, min longitude, max longitude].")
+        raise ValueError(
+            "Improper bounding box formatting, should be [max latitude, min latitude, min longitude, max longitude]."
+        )
 
     dem_path = work_dir / 'elevation.dem'
     dem_rsc = work_dir / 'elevation.dem.rsc'

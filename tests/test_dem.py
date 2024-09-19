@@ -1,8 +1,7 @@
-import pytest
-
 from pathlib import Path
 from unittest import mock
 
+import pytest
 from shapely.geometry import box
 
 from hyp3_srg import dem, utils

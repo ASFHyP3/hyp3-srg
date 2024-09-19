@@ -310,7 +310,9 @@ def main():
         S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38.geo
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--bounds', default=None, type=float, nargs=4, help='Bounds for DEM (max lat, min lat, min lon, max lon)')
+    parser.add_argument(
+        '--bounds', default=None, type=float, nargs=4, help='Bounds for DEM (max lat, min lat, min lon, max lon)'
+    )
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument('granules', type=str.split, nargs='+', help='GSLC granules.')
