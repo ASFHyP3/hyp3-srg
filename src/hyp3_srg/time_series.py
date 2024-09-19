@@ -143,13 +143,6 @@ def compute_sbas_velocity_solution(
     copyfile(work_dir / 'intlist', work_dir / 'unwlist')
     utils.call_stanford_module('util/sed.py', args=['s/int/unw/g', 'unwlist'], work_dir=work_dir)
 
-    num_unw_files = 0
-    num_slcs = 0
-    with open(work_dir / 'unwlist', 'r') as unw_list:
-        num_unw_files = len(unw_list.readlines())
-    with open(work_dir / 'geolist', 'r') as slc_list:
-        num_slcs = len(slc_list.readlines())
-
     ref_point_args = ['unwlist', unw_width, unw_length, threshold]
     utils.call_stanford_module('int/findrefpoints', args=ref_point_args, work_dir=work_dir)
 
@@ -157,6 +150,14 @@ def compute_sbas_velocity_solution(
         tropo_correct_args = ['unwlist', unw_width, unw_length]
         utils.call_stanford_module('int/tropocorrect.py', args=tropo_correct_args, work_dir=work_dir)
 
+    num_unw_files = 0
+    with open(work_dir / 'unwlist', 'r') as unw_list:
+        num_unw_files = len(unw_list.readlines())
+
+    num_slcs = 0
+    with open(work_dir / 'geolist', 'r') as slc_list:
+        num_slcs = len(slc_list.readlines())
+ 
     sbas_velocity_args = ['unwlist', num_unw_files, num_slcs, unw_width, 'ref_locs']
     utils.call_stanford_module('sbas/sbas', args=sbas_velocity_args, work_dir=work_dir)
 
