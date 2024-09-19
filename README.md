@@ -26,7 +26,7 @@ docker run -it --rm \
 ```
 
 ### Back-projection 
-The `back_projection` processing type produces geocoded SLCs for raw S1 data. The workflow takes a list of Level-0 S1 granule names and outputs them as geocoded SLCs (GSLCs).
+The `back_projection` processing type produces geocoded SLCs using Level-0 Sentinel-1 data as input. The workflow takes a list of Level-0 Sentinel-1 granule names and outputs them as geocoded SLCs (GSLCs).
 An example command for the `back_projection` workflow is:
 ```bash
 docker run -it --rm \
