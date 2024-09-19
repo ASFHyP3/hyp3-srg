@@ -14,7 +14,6 @@ from typing import Iterable, Optional
 from boto3 import client
 from hyp3lib.aws import upload_file_to_s3
 from hyp3lib.fetch import download_file as download_from_http
-from shapely.geometry import Polygon
 
 from hyp3_srg import dem, utils
 
@@ -191,7 +190,7 @@ def create_time_series(
 
 def create_time_series_product_name(
     granule_names: list[str],
-    bbox: Polygon,
+    bounds: list[float],
 ):
     prefix = "S1_SRG_SBAS"
     split_names = [granule.split("_") for granule in granule_names]
@@ -206,35 +205,28 @@ def create_time_series_product_name(
     earliest_granule = start_dates[0]
     latest_granule = start_dates[-1]
 
-    lons, lats = bbox.exterior.coords.xy
-
     def lat_string(lat):
         return ('N' if lat >= 0 else 'S') + f"{('%.1f' % abs(lat)).zfill(4)}".replace('.', '_')
 
     def lon_string(lon):
         return ('E' if lon >= 0 else 'W') + f"{('%.1f' % abs(lon)).zfill(5)}".replace('.', '_')
 
-    lat_lims = [lat_string(lat) for lat in [min(lats), max(lats)]]
-    lon_lims = [lon_string(lon) for lon in [min(lons), max(lons)]]
-
-    product_id = token_hex(2).upper()
-
     return '_'.join([
         prefix,
         relative_orbit,
-        lon_lims[0],
-        lat_lims[0],
-        lon_lims[1],
-        lat_lims[1],
+        lon_string(bounds[2]),
+        lat_string(bounds[0]),
+        lon_string(bounds[3]),
+        lat_string(bounds[1]),
         earliest_granule,
         latest_granule,
-        product_id
+        token_hex(2).upper()
     ])
 
 
 def package_time_series(
         granules: list[str],
-        bbox: Polygon,
+        bounds: list[float],
         work_dir: Optional[Path] = None
 ) -> Path:
     """Package the time series into a product zip file.
@@ -248,7 +240,7 @@ def package_time_series(
     if work_dir is None:
         work_dir = Path.cwd()
     sbas_dir = work_dir / 'sbas'
-    product_name = create_time_series_product_name(granules, bbox)
+    product_name = create_time_series_product_name(granules, bounds)
     product_path = work_dir / product_name
     product_path.mkdir(exist_ok=True, parents=True)
     zip_path = work_dir / f'{product_name}.zip'
@@ -275,6 +267,7 @@ def package_time_series(
 
 def time_series(
     granules: Iterable[str],
+    bounds: list[float],
     bucket: str = None,
     bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
@@ -294,15 +287,14 @@ def time_series(
         mkdir(sbas_dir)
 
     granule_names = load_products(granules)
-    bbox = utils.get_bbox(granule_names[0]).buffer(0.1)
-    dem_path = dem.download_dem_for_srg(bbox, work_dir)
+    dem_path = dem.download_dem_from_bounds(bounds, work_dir)
 
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
     create_time_series(work_dir=sbas_dir)
 
-    zip_path = package_time_series(work_dir)
+    zip_path = package_time_series(granule_names, bounds, work_dir)
     if bucket:
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
@@ -318,6 +310,7 @@ def main():
         S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38.geo
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--bounds', default=None, type=float, nargs=4, help='Bounds for DEM (max lat, min lat, min lon, max lon)')
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument('granules', type=str.split, nargs='+', help='GSLC granules.')
