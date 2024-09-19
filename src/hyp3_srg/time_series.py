@@ -157,7 +157,7 @@ def compute_sbas_velocity_solution(
     num_slcs = 0
     with open(work_dir / 'geolist', 'r') as slc_list:
         num_slcs = len(slc_list.readlines())
- 
+
     sbas_velocity_args = ['unwlist', num_unw_files, num_slcs, unw_width, 'ref_locs']
     utils.call_stanford_module('sbas/sbas', args=sbas_velocity_args, work_dir=work_dir)
 

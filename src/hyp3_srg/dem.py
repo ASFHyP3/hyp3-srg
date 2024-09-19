@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional
 
 import requests
-from shapely.geometry import Polygon
 
 from hyp3_srg import utils
 
