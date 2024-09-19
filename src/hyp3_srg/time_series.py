@@ -132,8 +132,8 @@ def compute_sbas_velocity_solution(
     """Computes the sbas velocity solution from the unwrapped interferograms
 
     Args:
-        threshold: ...
-        do_tropo_correction: ...
+        threshold: correlation threshold for picking reference points
+        do_tropo_correction: whether or not to apply tropospheric correction
         unw_shape: tuple containing the width and length from the dem.rsc file
         work_dir: the directory containing the wrapped interferograms
     """
@@ -173,8 +173,8 @@ def create_time_series(
     Args:
         looks: tuple containing the number range looks and azimuth looks
         baselines: tuple containing the time baseline and spatial baseline
-        threshold: ...
-        do_tropo_correction: ...
+        threshold: correlation threshold for picking reference points
+        do_tropo_correction: whether or not to apply tropospheric correction
         work_dir: the directory containing the GSLCs to do work in
     """
     dem_shape = get_size_from_dem('elevation.dem.rsc')
@@ -232,6 +232,8 @@ def package_time_series(
     """Package the time series into a product zip file.
 
     Args:
+        granules: list of the granule names
+        bounds: bounds that were used to aquire the dem extent
         work_dir: Working directory for completed back-projection run
 
     Returns:
@@ -276,6 +278,7 @@ def time_series(
 
     Args:
         granules: List of Sentinel-1 GSLCs
+        bounds: bounding box that was used to generate the GSLCs for aquiring the DEM
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
@@ -311,7 +314,7 @@ def main():
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '--bounds', default=None, type=float, nargs=4, help='Bounds for DEM (max lat, min lat, min lon, max lon)'
+        '--bounds', default=None, type=float, nargs=4, help='Bounding box that was used to generate the GSLCs'
     )
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
