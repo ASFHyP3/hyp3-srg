@@ -99,6 +99,7 @@ def back_project(
 
     Args:
         granules: List of Sentinel-1 level-0 granules to back-project
+        bounds: DEM extent bounding box [min_lon, min_lat, max_lon, max_lat]
         earthdata_username: Username for NASA's EarthData service
         earthdata_password: Password for NASA's EarthData service
         bucket: AWS S3 bucket for uploading the final product(s)
@@ -118,11 +119,10 @@ def back_project(
         orbit_path = utils.download_orbit(granule, work_dir)
         bboxs.append(granule_bbox)
         granule_orbit_pairs.append((granule_path, orbit_path))
+
     if bounds is None:
-        full_bbox = unary_union(bboxs).buffer(0.1)
-        dem_path = dem.download_dem_for_srg(full_bbox, work_dir)
-    else:
-        dem_path = dem.download_dem_from_bounds(bounds, work_dir)
+        bounds = unary_union(bboxs).buffer(0.1).bounds
+    dem_path = dem.download_dem_for_srg(bounds, work_dir)
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
     back_project_granules(granule_orbit_pairs, work_dir=work_dir, gpu=gpu)
@@ -151,7 +151,7 @@ def main():
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
     parser.add_argument(
-        '--bounds', default=None, type=float, nargs=4, help='Bounds for DEM (max lat, min lat, min lon, max lon)'
+        '--bounds', default=None, type=float, nargs=4, help='DEM extent bbox: [min_lon, min_lat, max_lon, max_lat].'
     )
     parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()

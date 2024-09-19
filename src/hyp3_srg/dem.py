@@ -28,34 +28,17 @@ def ensure_egm_model_available():
                 f.write(chunk)
 
 
-def download_dem_for_srg(
-    footprint: Polygon,
-    work_dir: Path,
-) -> Path:
-    """Download the given DEM for the given extent.
+def download_dem_for_srg(bounds: list[float], work_dir: Optional[Path]):
+    """Download the DEM for the given bounds - [min_lon, min_lat, max_lon, max_lat].
 
     Args:
-        footprint: The footprint to download a DEM for
+        bounds: The bounds of the extent of the desired DEM - [min_lon, min_lat, max_lon, max_lat].
         work_dir: The directory to save create the DEM in
 
     Returns:
         The path to the downloaded DEM
     """
-    stanford_bounds = [footprint.bounds[i] for i in [3, 1, 0, 2]]
-    return download_dem_from_bounds(stanford_bounds, work_dir)
-
-
-def download_dem_from_bounds(bounds: list[float], work_dir: Optional[Path]):
-    """Download the DEM for the given stanford bounds.
-
-    Args:
-        footprint: The footprint to download a DEM for
-        work_dir: The directory to save create the DEM in
-
-    Returns:
-        The path to the downloaded DEM
-    """
-    if (bounds[0] <= bounds[1] or bounds[2] >= bounds[3]):
+    if (bounds[0] >= bounds[2] or bounds[1] >= bounds[3]):
         raise ValueError(
             "Improper bounding box formatting, should be [max latitude, min latitude, min longitude, max longitude]."
         )
@@ -68,6 +51,7 @@ def download_dem_from_bounds(bounds: list[float], work_dir: Optional[Path]):
 
     ensure_egm_model_available()
 
-    args = [str(dem_path), str(dem_rsc), *bounds]
+    stanford_bounds = [bounds[i] for i in [3, 1, 0, 2]]
+    args = [str(dem_path), str(dem_rsc), *stanford_bounds]
     utils.call_stanford_module('DEM/createDEMcop.py', args, work_dir=work_dir)
     return dem_path

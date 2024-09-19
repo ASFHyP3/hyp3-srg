@@ -192,6 +192,15 @@ def create_time_series_product_name(
     granule_names: list[str],
     bounds: list[float],
 ):
+    """Create a product name for the given granules.
+
+    Args:
+        granules: list of the granule names
+        bounds: bounding box that was used to generate the GSLCs
+
+    Returns:
+        the product name as a string.
+    """
     prefix = "S1_SRG_SBAS"
     split_names = [granule.split("_") for granule in granule_names]
 
@@ -214,10 +223,10 @@ def create_time_series_product_name(
     return '_'.join([
         prefix,
         relative_orbit,
-        lon_string(bounds[2]),
-        lat_string(bounds[0]),
-        lon_string(bounds[3]),
+        lon_string(bounds[0]),
         lat_string(bounds[1]),
+        lon_string(bounds[2]),
+        lat_string(bounds[3]),
         earliest_granule,
         latest_granule,
         token_hex(2).upper()
@@ -233,7 +242,7 @@ def package_time_series(
 
     Args:
         granules: list of the granule names
-        bounds: bounds that were used to aquire the dem extent
+        bounds: bounding box that was used to generate the GSLCs
         work_dir: Working directory for completed back-projection run
 
     Returns:
@@ -278,7 +287,7 @@ def time_series(
 
     Args:
         granules: List of Sentinel-1 GSLCs
-        bounds: bounding box that was used to generate the GSLCs for aquiring the DEM
+        bounds: bounding box that was used to generate the GSLCs
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
@@ -290,7 +299,7 @@ def time_series(
         mkdir(sbas_dir)
 
     granule_names = load_products(granules)
-    dem_path = dem.download_dem_from_bounds(bounds, work_dir)
+    dem_path = dem.download_dem_for_srg(bounds, work_dir)
 
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
