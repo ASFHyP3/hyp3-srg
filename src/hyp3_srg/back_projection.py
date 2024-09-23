@@ -120,7 +120,7 @@ def back_project(
         bboxs.append(granule_bbox)
         granule_orbit_pairs.append((granule_path, orbit_path))
 
-    if bounds is None:
+    if bounds is None or bounds == [0, 0, 0, 0]:
         bounds = unary_union(bboxs).buffer(0.1).bounds
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
