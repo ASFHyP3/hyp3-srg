@@ -120,7 +120,7 @@ def back_project(
         bboxs.append(granule_bbox)
         granule_orbit_pairs.append((granule_path, orbit_path))
 
-    if bounds is None:
+    if bounds is None or bounds == [0, 0, 0, 0]:
         bounds = unary_union(bboxs).buffer(0.1).bounds
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
@@ -151,11 +151,19 @@ def main():
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
     parser.add_argument(
-        '--bounds', default=None, type=float, nargs=4, help='DEM extent bbox: [min_lon, min_lat, max_lon, max_lat].'
+        '--bounds',
+        default=None,
+        type=str.split,
+        nargs='+',
+        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].'
     )
     parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
+    if args.bounds is not None:
+        args.bounds = [float(item) for sublist in args.bounds for item in sublist]
+        if len(args.bounds) != 4:
+            parser.error('Bounds must have exactly 4 values: [min lon, min lat, max lon, max lat] in EPSG:4326.')
     back_project(**args.__dict__)
 
 
