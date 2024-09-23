@@ -151,11 +151,15 @@ def main():
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
     parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
     parser.add_argument(
-        '--bounds', default=None, type=float, nargs=4, help='DEM extent bbox: [min_lon, min_lat, max_lon, max_lat].'
+        '--bounds', default=None, type=str.split, nargs='+', help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].'
     )
     parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
+    if args.bounds is not None:
+        args.bounds = [float(item) for sublist in args.bounds for item in sublist]
+        if len(args.bounds) != 4:
+            parser.error('Bounds must have exactly 4 values: [min lon, min lat, max lon, max lat] in EPSG:4326.')
     back_project(**args.__dict__)
 
 
