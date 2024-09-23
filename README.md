@@ -8,7 +8,7 @@ HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 
 The HyP3-SRG plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). This set of workflow uses the [SRG alogorithms]((https://doi.org/10.1109/LGRS.2017.2753580)) to process Level-0 Sentinel-1 (S1) data to geocoded, user-friendly products that can be used for time-series analysis. The workflows currently included in this plugin are:
 
-- [`back_projection`](#back-projection): A workflow for creating geocoded Sentinel-1 SLCs,
+- [`back_projection`](#back-projection): A workflow for creating geocoded Sentinel-1 SLCs.
 - [`time_series`](#time-series): A workflow for creating a deformation timeseries of geocoded Sentinel-1 SLCs. 
 
 To run a workflow, you'll first need to build the docker container:
