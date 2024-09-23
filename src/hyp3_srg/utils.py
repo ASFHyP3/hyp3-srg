@@ -154,6 +154,26 @@ def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = Fals
     return out_path, bbox
 
 
+def get_bbox(granule_name: str) -> Tuple[Path, Polygon]:
+    """Get the buffered extent from asf_search.
+
+    Args:
+        granule_name: Name of the granule to download
+
+    Returns:
+        bbox: the buffered extent polygon
+    """
+    granule_name = granule_name.split('.')[0]
+
+    if not granule_name.endswith('-RAW'):
+        granule_name += '-RAW'
+
+    result = asf_search.granule_search([granule_name])[0]
+    bbox = shape(result.geojson()['geometry'])
+
+    return bbox
+
+
 def download_orbit(granule_name: str, output_dir: Path) -> Path:
     """Download a S1 orbit file. Prefer using the ESA API,
     but fallback to ASF if needed.
@@ -167,6 +187,19 @@ def download_orbit(granule_name: str, output_dir: Path) -> Path:
     """
     orbit_path = str(fetch_for_scene(granule_name, dir=output_dir))
     return orbit_path
+
+
+def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
+    """Create a parameter file for the processor.
+
+    Args:
+        dem_path: Path to the DEM file
+        dem_rsc_path: Path to the DEM RSC file
+        output_dir: Directory to save the parameter file in
+    """
+    lines = [str(dem_path), str(dem_rsc_path)]
+    with open(output_dir / 'params', 'w') as f:
+        f.write('\n'.join(lines))
 
 
 def call_stanford_module(local_name, args: List = [], work_dir: Optional[Path] = None) -> None:

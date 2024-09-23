@@ -69,6 +69,7 @@ SHELL ["/bin/bash", "-l", "-c"]
 USER ${CONDA_UID}
 WORKDIR /home/conda/
 
+COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /srg/snaphu_v2.0b0.0.0/bin/snaphu /srg/bin/snaphu
 COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /srg /srg
 COPY --chown=${CONDA_UID}:${CONDA_GID} --from=builder /hyp3-srg /hyp3-srg
 
