@@ -9,7 +9,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.8.1]
 
 ### Changed
-* `time_series` can now search an s3 bucket (`--gslc-bucket` and `--gslc-bucket-prefix`) for granules if no granules are explicitly provided
+* `time_series` can now search an s3 bucket for GSLCs (using `--gslc-bucket` and `--gslc-bucket-prefix`) if no GSLC granules are explicitly provided
 
 ## [0.8.0]
 
