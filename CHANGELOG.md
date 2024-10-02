@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1]
+
+### Changed
+* `time_series` will now search the s3 bucket (`--bucket` and `--bucket-prefix`) for granules if no granules were explicitly provided
+
 ## [0.8.0]
 
 ### Added
