@@ -44,6 +44,24 @@ def get_s3_args(uri: str, dest_dir: Optional[Path] = None) -> None:
     return bucket, key, out_path
 
 
+def get_granules_from_s3(bucket: str, prefix: str = '') -> list[str]:
+    """Retrieve granule (zip files) uris from the given s3 bucket and prefix.
+
+    Args:
+        bucket: the s3 bucket
+        prefix: the path after the bucket and before the file
+
+    Returns:
+        uris: a list of uris to the zip files
+    """
+
+    bucket = bucket.replace('s3:', '').replace('/', '')
+    res = S3.list_objects(Bucket=bucket, Prefix=prefix)
+    keys = [item['Key'] for item in res['Contents'] if item['Key'].endswith('.zip')]
+    uris = ['/'.join(['s3://' + bucket, key]) for key in keys]
+    return uris
+
+
 def download_from_s3(uri: str, dest_dir: Optional[Path] = None) -> None:
     """Download a file from an S3 bucket
 
@@ -316,6 +334,14 @@ def time_series(
     if not sbas_dir.exists():
         mkdir(sbas_dir)
 
+    bucket_is_for_upload = True
+
+    if granules == []:
+        if bucket is None:
+            raise ValueError('Either a list of granules or a s3 bucket must be provided, but got neither.')
+        granules = get_granules_from_s3(bucket, bucket_prefix)
+        bucket_is_for_upload = False
+
     granule_names = load_products(granules)
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
 
@@ -325,7 +351,7 @@ def time_series(
     create_time_series(work_dir=sbas_dir)
 
     zip_path = package_time_series(granule_names, bounds, work_dir)
-    if bucket:
+    if bucket_is_for_upload and bucket:
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
     print(f'Finished time-series processing for {", ".join(granule_names)}!')
@@ -345,7 +371,7 @@ def main():
     )
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
-    parser.add_argument('granules', type=str.split, nargs='+', help='GSLC granules.')
+    parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
     time_series(**args.__dict__)
