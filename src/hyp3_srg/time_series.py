@@ -4,6 +4,7 @@ Sentinel-1 GSLC time series processing
 
 import argparse
 import logging
+import re
 import shutil
 from os import mkdir
 from pathlib import Path
@@ -54,10 +55,13 @@ def get_granules_from_s3(bucket: str, prefix: str = '') -> list[str]:
     Returns:
         uris: a list of uris to the zip files
     """
-
     bucket = bucket.replace('s3:', '').replace('/', '')
     res = S3.list_objects(Bucket=bucket, Prefix=prefix)
-    keys = [item['Key'] for item in res['Contents'] if item['Key'].endswith('.zip')]
+
+    def is_valid_key(key):
+        return (key.endswith('.zip') or key.endswith('.geo')) and re.search('S1[AB]_IW_RAW', key.split('/')[-1])
+
+    keys = [item['Key'] for item in res['Contents'] if is_valid_key(item['Key'])]
     uris = ['/'.join(['s3://' + bucket, key]) for key in keys]
     return uris
 
@@ -317,6 +321,8 @@ def time_series(
     bounds: list[float],
     bucket: str = None,
     bucket_prefix: str = '',
+    gslc_bucket: str = None,
+    gslc_bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
 ) -> None:
     """Create and package a time series stack from a set of Sentinel-1 GSLCs.
@@ -326,6 +332,8 @@ def time_series(
         bounds: bounding box that was used to generate the GSLCs
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
+        gslc_bucket: AWS S3 bucket containing GSLCs for time-series processing
+        gslc_bucket_prefix: Path to GSLCs within gslc_bucket.
         work_dir: Working directory for processing
     """
     if work_dir is None:
@@ -334,13 +342,10 @@ def time_series(
     if not sbas_dir.exists():
         mkdir(sbas_dir)
 
-    bucket_is_for_upload = True
-
     if granules == []:
-        if bucket is None:
+        if gslc_bucket is None:
             raise ValueError('Either a list of granules or a s3 bucket must be provided, but got neither.')
-        granules = get_granules_from_s3(bucket, bucket_prefix)
-        bucket_is_for_upload = False
+        granules = get_granules_from_s3(gslc_bucket, gslc_bucket_prefix)
 
     granule_names = load_products(granules)
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
@@ -351,7 +356,7 @@ def time_series(
     create_time_series(work_dir=sbas_dir)
 
     zip_path = package_time_series(granule_names, bounds, work_dir)
-    if bucket_is_for_upload and bucket:
+    if bucket:
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
     print(f'Finished time-series processing for {", ".join(granule_names)}!')
@@ -371,6 +376,8 @@ def main():
     )
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
+    parser.add_argument('--gslc-bucket', help='AWS S3 bucket containing GSLCs to process')
+    parser.add_argument('--gslc-bucket-prefix', default='', help='Path to GSLCs within gslc-bucket.')
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
