@@ -342,6 +342,9 @@ def time_series(
     if not sbas_dir.exists():
         mkdir(sbas_dir)
 
+    if granules and gslc_bucket:
+        raise ValueError('One of a list of granules or a s3 bucket must be provided, but got both.')
+
     if granules == []:
         if gslc_bucket is None:
             raise ValueError('Either a list of granules or a s3 bucket must be provided, but got neither.')
