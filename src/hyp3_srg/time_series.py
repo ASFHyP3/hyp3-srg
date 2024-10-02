@@ -12,51 +12,27 @@ from secrets import token_hex
 from shutil import copyfile
 from typing import Iterable, Optional
 
-from boto3 import client
 from hyp3lib.aws import upload_file_to_s3
 from hyp3lib.fetch import download_file as download_from_http
 
 from hyp3_srg import dem, utils
 
 
-S3 = client('s3')
 log = logging.getLogger(__name__)
 
 
-def get_s3_args(uri: str, dest_dir: Optional[Path] = None) -> None:
-    """Retrieve the arguments for downloading from an S3 bucket
-
-    Args:
-        uri: URI of the file to download
-        dest_dir: the directory to place the downloaded file in
-
-    Returns:
-        bucket: the s3 bucket to download from
-        key: the path to the file following the s3 bucket
-        out_path: the destination path of the file to download
-    """
-    if dest_dir is None:
-        dest_dir = Path.cwd()
-
-    simple_s3_uri = Path(uri.replace('s3://', ''))
-    bucket = simple_s3_uri.parts[0]
-    key = '/'.join(simple_s3_uri.parts[1:])
-    out_path = dest_dir / simple_s3_uri.parts[-1]
-    return bucket, key, out_path
-
-
-def get_granules_from_s3(bucket: str, prefix: str = '') -> list[str]:
+def get_gslc_uris_from_s3(bucket: str, prefix: str = '') -> list[str]:
     """Retrieve granule (zip files) uris from the given s3 bucket and prefix.
 
     Args:
-        bucket: the s3 bucket
+        bucket: the s3 bucket name
         prefix: the path after the bucket and before the file
 
     Returns:
         uris: a list of uris to the zip files
     """
     bucket = bucket.replace('s3:', '').replace('/', '')
-    res = S3.list_objects(Bucket=bucket, Prefix=prefix)
+    res = utils.s3_list_objects(bucket, prefix)
 
     def is_valid_key(key):
         return (key.endswith('.zip') or key.endswith('.geo')) and re.search('S1[AB]_IW_RAW', key.split('/')[-1])
@@ -64,18 +40,6 @@ def get_granules_from_s3(bucket: str, prefix: str = '') -> list[str]:
     keys = [item['Key'] for item in res['Contents'] if is_valid_key(item['Key'])]
     uris = ['/'.join(['s3://' + bucket, key]) for key in keys]
     return uris
-
-
-def download_from_s3(uri: str, dest_dir: Optional[Path] = None) -> None:
-    """Download a file from an S3 bucket
-
-    Args:
-        uri: URI of the file to download
-        dest_dir: the directory to place the downloaded file in
-    """
-    bucket, key, out_path = get_s3_args(uri, dest_dir)
-    S3.download_file(bucket, key, out_path)
-    return out_path
 
 
 def load_products(uris: Iterable[str], overwrite: bool = False):
@@ -96,7 +60,7 @@ def load_products(uris: Iterable[str], overwrite: bool = False):
         if product_exists and not overwrite:
             pass
         elif uri.startswith('s3'):
-            download_from_s3(uri, dest_dir=work_dir)
+            utils.download_from_s3(uri, dest_dir=work_dir)
         elif uri.startswith('http'):
             download_from_http(uri, directory=work_dir)
         elif len(Path(uri).parts) > 1:
@@ -348,7 +312,7 @@ def time_series(
     if granules == []:
         if gslc_bucket is None:
             raise ValueError('Either a list of granules or a s3 bucket must be provided, but got neither.')
-        granules = get_granules_from_s3(gslc_bucket, gslc_bucket_prefix)
+        granules = get_gslc_uris_from_s3(gslc_bucket, gslc_bucket_prefix)
 
     granule_names = load_products(granules)
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
