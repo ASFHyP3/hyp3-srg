@@ -1,6 +1,7 @@
 from pathlib import Path
+from unittest import mock
 
-from hyp3_srg import time_series
+from hyp3_srg import time_series, utils
 
 
 def test_create_time_series_product_name():
@@ -43,9 +44,37 @@ def test_get_size_from_dem(tmp_path):
     assert dem_width, dem_height == (1235, 873)
 
 
-def test_get_s3_args():
-    s3_uri_1 = 's3://foo/bar.zip'
-    s3_uri_2 = 's3://foo/bing/bong/bar.zip'
-    dest_dir = Path('output')
-    assert time_series.get_s3_args(s3_uri_1) == ('foo', 'bar.zip', Path.cwd() / "bar.zip")
-    assert time_series.get_s3_args(s3_uri_2, dest_dir) == ('foo', 'bing/bong/bar.zip', dest_dir / 'bar.zip')
+def test_get_gslc_uris_from_s3(monkeypatch):
+    bucket = 'bucket'
+    prefix = 'prefix'
+
+    mock_response = {
+        'Contents': [
+            {
+                'Key': f'{prefix}/S1A_IW_RAW_foo.zip'
+            },
+            {
+                'Key':  f'{prefix}/prefibad_key.zip'
+            },
+            {
+                'Key':  f'{prefix}/S1A_IW_RAW_foo.bad_extension'
+            },
+            {
+                'Key':  f'{prefix}/S1B_IW_RAW_bar.geo'
+            }
+        ]
+    }
+
+    correct_uris = [
+        f's3://{bucket}/{prefix}/S1A_IW_RAW_foo.zip',
+        f's3://{bucket}/{prefix}/S1B_IW_RAW_bar.geo'
+    ]
+
+    with monkeypatch.context() as m:
+        mock_s3_list_objects = mock.Mock(return_value=mock_response)
+        m.setattr(utils, 's3_list_objects', mock_s3_list_objects)
+
+        uris = time_series.get_gslc_uris_from_s3(bucket, prefix)
+        assert uris == correct_uris
+        uris = time_series.get_gslc_uris_from_s3(f's3://{bucket}/', prefix)
+        assert uris == correct_uris
