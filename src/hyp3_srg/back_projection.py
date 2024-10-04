@@ -164,6 +164,10 @@ def main():
         args.bounds = [float(item) for sublist in args.bounds for item in sublist]
         if len(args.bounds) != 4:
             parser.error('Bounds must have exactly 4 values: [min lon, min lat, max lon, max lat] in EPSG:4326.')
+
+    # TODO: don't hard-code this
+    args.bucket_prefix += '/granules'
+
     back_project(**args.__dict__)
 
 

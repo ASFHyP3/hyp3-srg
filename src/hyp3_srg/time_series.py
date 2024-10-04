@@ -343,7 +343,7 @@ def main():
     parser.add_argument(
         '--gslc-bucket-prefix',
         default='',
-        help='GSLCs are found at bucket-prefix/gslc-bucket_prefix within bucket'
+        help='GSLCs are found at bucket-prefix/gslc-bucket-prefix within bucket'
     )
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
