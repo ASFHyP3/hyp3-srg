@@ -39,7 +39,7 @@ def test_get_size_from_dem(tmp_path):
     rsc_path = tmp_path / 'elevation.dem.rsc'
     with open(rsc_path, 'w') as rsc_file:
         rsc_file.write(rsc_content.strip())
-    dem_width, dem_height = time_series.get_size_from_dem(dem_file=rsc_path)
+    dem_width, dem_height = time_series.get_size_from_dem(dem_path=rsc_path)
     assert dem_width, dem_height == (1235, 873)
 
 
