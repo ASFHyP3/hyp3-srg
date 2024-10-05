@@ -342,7 +342,7 @@ def main():
     )
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
-    parser.add_argument('--use-granules-from-s3', type=bool, action='store_true')
+    parser.add_argument('--use-granules-from-s3', action='store_true')
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
