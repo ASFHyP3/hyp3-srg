@@ -165,7 +165,7 @@ def main():
         if len(args.bounds) != 4:
             parser.error('Bounds must have exactly 4 values: [min lon, min lat, max lon, max lat] in EPSG:4326.')
 
-    # TODO: don't hard-code this
+    # TODO: add a cli option to write granules to this sub-prefix
     args.bucket_prefix += '/granules'
 
     back_project(**args.__dict__)

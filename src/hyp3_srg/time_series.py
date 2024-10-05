@@ -281,9 +281,9 @@ def package_time_series(
 def time_series(
     granules: Iterable[str],
     bounds: list[float],
+    use_granules_from_s3: bool,
     bucket: str = None,
     bucket_prefix: str = '',
-    gslc_bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
 ) -> None:
     """Create and package a time series stack from a set of Sentinel-1 GSLCs.
@@ -291,9 +291,9 @@ def time_series(
     Args:
         granules: List of Sentinel-1 GSLCs
         bounds: bounding box that was used to generate the GSLCs
+        use_granules_from_s3: Whether to download input granules from S3
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
-        gslc_bucket_prefix: GSLCs are found at bucket_prefix/gslc_bucket_prefix within bucket
         work_dir: Working directory for processing
     """
     if work_dir is None:
@@ -302,14 +302,16 @@ def time_series(
     if not sbas_dir.exists():
         mkdir(sbas_dir)
 
-    if granules and gslc_bucket_prefix:
-        raise ValueError('One of a list of granules or a GSLC S3 bucket prefix must be provided, but got both.')
+    # TODO: check this at cli parsing
+    if granules and use_granules_from_s3:
+        raise ValueError('granules must not be provided with --use-granules-from-s3')
 
+    # TODO: check this at cli parsing
     if not granules:
-        if gslc_bucket_prefix is None:
-            raise ValueError('Either a list of granules or a GSLC S3 bucket prefix must be provided, but got neither.')
+        if not use_granules_from_s3:
+            raise ValueError('--use-granules-from-s3 must be used if granules not provided')
         # TODO: check that bucket and bucket_prefix were passed
-        granules = get_gslc_uris_from_s3(bucket, f'{bucket_prefix}/{gslc_bucket_prefix}')
+        granules = get_gslc_uris_from_s3(bucket, f'{bucket_prefix}/granules')
 
     granule_names = load_products(granules)
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
@@ -340,11 +342,7 @@ def main():
     )
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
-    parser.add_argument(
-        '--gslc-bucket-prefix',
-        default='',
-        help='GSLCs are found at bucket-prefix/gslc-bucket-prefix within bucket'
-    )
+    parser.add_argument('--use-granules-from-s3', type=bool, action='store_true')
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
