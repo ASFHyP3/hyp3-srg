@@ -337,15 +337,23 @@ def main():
         S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38.geo
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        '--bounds', default=None, type=float, nargs=4, help='Bounding box that was used to generate the GSLCs'
-    )
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
+    parser.add_argument(
+        '--bounds',
+        default=None,
+        type=str.split,
+        nargs='+',
+        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].'
+    )
     parser.add_argument('--use-granules-from-s3', action='store_true')
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
+    if args.bounds is not None:
+        args.bounds = [float(item) for sublist in args.bounds for item in sublist]
+        if len(args.bounds) != 4:
+            parser.error('Bounds must have exactly 4 values: [min lon, min lat, max lon, max lat] in EPSG:4326.')
     time_series(**args.__dict__)
 
 
