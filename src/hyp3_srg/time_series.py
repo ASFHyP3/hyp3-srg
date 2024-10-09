@@ -281,7 +281,7 @@ def package_time_series(
 def time_series(
     granules: Iterable[str],
     bounds: list[float],
-    use_granules_from_s3: bool,
+    use_gslc_prefix: bool,
     bucket: str = None,
     bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
@@ -291,7 +291,7 @@ def time_series(
     Args:
         granules: List of Sentinel-1 GSLCs
         bounds: bounding box that was used to generate the GSLCs
-        use_granules_from_s3: Whether to download input granules from S3
+        use_gslc_prefix: Whether to download input granules from S3
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
@@ -302,16 +302,15 @@ def time_series(
     if not sbas_dir.exists():
         mkdir(sbas_dir)
 
-    # TODO: check this at cli parsing
-    if granules and use_granules_from_s3:
-        raise ValueError('granules must not be provided with --use-granules-from-s3')
+    if not (granules or use_gslc_prefix):
+        raise ValueError('use_gslc_prefix must be True if granules not provided')
 
-    # TODO: check this at cli parsing
-    if not granules:
-        if not use_granules_from_s3:
-            raise ValueError('--use-granules-from-s3 must be used if granules not provided')
-        # TODO: check that bucket and bucket_prefix were passed
-        granules = get_gslc_uris_from_s3(bucket, f'{bucket_prefix}/granules')
+    if use_gslc_prefix:
+        if granules:
+            raise ValueError('granules must not be provided if use_gslc_prefix is True')
+        if not (bucket and bucket_prefix):
+            raise ValueError('bucket and bucket_prefix must be given if use_gslc_prefix is True')
+        granules = get_gslc_uris_from_s3(bucket, f'{bucket_prefix}/GSLC_granules')
 
     granule_names = load_products(granules)
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
@@ -346,7 +345,14 @@ def main():
         nargs='+',
         help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].'
     )
-    parser.add_argument('--use-granules-from-s3', action='store_true')
+    parser.add_argument(
+        '--use-gslc-prefix',
+        action='store_true',
+        help=(
+            'Download GSLC input granules from a subprefix located within the bucket and prefix given by the'
+            ' --bucket and --bucket-prefix options'
+        )
+    )
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
     args.granules = [item for sublist in args.granules for item in sublist]
