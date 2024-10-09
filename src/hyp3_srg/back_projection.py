@@ -174,7 +174,9 @@ def main():
     )
     parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()
+
     args.granules = [item for sublist in args.granules for item in sublist]
+
     if args.bounds is not None:
         args.bounds = [float(item) for sublist in args.bounds for item in sublist]
         if len(args.bounds) != 4:

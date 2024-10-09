@@ -355,11 +355,14 @@ def main():
     )
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
+
     args.granules = [item for sublist in args.granules for item in sublist]
+
     if args.bounds is not None:
         args.bounds = [float(item) for sublist in args.bounds for item in sublist]
         if len(args.bounds) != 4:
             parser.error('Bounds must have exactly 4 values: [min lon, min lat, max lon, max lat] in EPSG:4326.')
+
     time_series(**args.__dict__)
 
 
