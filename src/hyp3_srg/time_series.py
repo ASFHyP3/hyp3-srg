@@ -74,26 +74,26 @@ def load_products(uris: Iterable[str], overwrite: bool = False):
     return granule_names
 
 
-def get_size_from_dem(dem_file: str) -> tuple[int]:
+def get_size_from_dem(dem_path: str) -> tuple[int, int]:
     """Get the length and width from a .rsc DEM file
 
     Args:
-        dem_file: path to the .rsc dem file.
+        dem_path: path to the .rsc dem file.
 
     Returns:
         dem_width, dem_length: tuple containing the dem width and dem length
     """
-    with open(dem_file) as dem:
-        width_line = dem.readline()
+    with open(dem_path) as dem_file:
+        width_line = dem_file.readline()
         dem_width = width_line.split()[1]
-        length_line = dem.readline()
+        length_line = dem_file.readline()
         dem_length = length_line.split()[1]
 
     return int(dem_width), int(dem_length)
 
 
 def generate_wrapped_interferograms(
-    looks: tuple[int], baselines: tuple[int], dem_shape: tuple[int], work_dir: Path
+    looks: tuple[int, int], baselines: tuple[int, int], dem_shape: tuple[int, int], work_dir: Path
 ) -> None:
     """Generates wrapped interferograms from GSLCs
 
@@ -113,7 +113,7 @@ def generate_wrapped_interferograms(
     utils.call_stanford_module('sentinel/ps_sbas_igrams.py', args=sbas_args, work_dir=work_dir)
 
 
-def unwrap_interferograms(dem_shape: tuple[int], unw_shape: tuple[int], work_dir: Path) -> None:
+def unwrap_interferograms(dem_shape: tuple[int, int], unw_shape: tuple[int, int], work_dir: Path) -> None:
     """Unwraps wrapped interferograms in parallel
 
     Args:
@@ -130,7 +130,7 @@ def unwrap_interferograms(dem_shape: tuple[int], unw_shape: tuple[int], work_dir
 
 
 def compute_sbas_velocity_solution(
-    threshold: float, do_tropo_correction: bool, unw_shape: tuple[int], work_dir: Path
+    threshold: float, do_tropo_correction: bool, unw_shape: tuple[int, int], work_dir: Path
 ) -> None:
     """Computes the sbas velocity solution from the unwrapped interferograms
 
@@ -153,11 +153,9 @@ def compute_sbas_velocity_solution(
         tropo_correct_args = ['unwlist', unw_width, unw_length]
         utils.call_stanford_module('int/tropocorrect.py', args=tropo_correct_args, work_dir=work_dir)
 
-    num_unw_files = 0
     with open(work_dir / 'unwlist', 'r') as unw_list:
         num_unw_files = len(unw_list.readlines())
 
-    num_slcs = 0
     with open(work_dir / 'geolist', 'r') as slc_list:
         num_slcs = len(slc_list.readlines())
 
@@ -166,8 +164,8 @@ def compute_sbas_velocity_solution(
 
 
 def create_time_series(
-    looks: tuple[int] = (10, 10),
-    baselines: tuple[int] = (1000, 1000),
+    looks: tuple[int, int] = (10, 10),
+    baselines: tuple[int, int] = (1000, 1000),
     threshold: float = 0.5,
     do_tropo_correction: bool = True,
     work_dir: Path | None = None,
@@ -184,7 +182,7 @@ def create_time_series(
     dem_shape = get_size_from_dem('elevation.dem.rsc')
     generate_wrapped_interferograms(looks=looks, baselines=baselines, dem_shape=dem_shape, work_dir=work_dir)
 
-    unw_shape = get_size_from_dem(work_dir / 'dem.rsc')
+    unw_shape = get_size_from_dem(str(work_dir / 'dem.rsc'))
     unwrap_interferograms(dem_shape=dem_shape, unw_shape=unw_shape, work_dir=work_dir)
 
     compute_sbas_velocity_solution(
@@ -199,7 +197,7 @@ def create_time_series_product_name(
     """Create a product name for the given granules.
 
     Args:
-        granules: list of the granule names
+        granule_names: list of the granule names
         bounds: bounding box that was used to generate the GSLCs
 
     Returns:
@@ -276,17 +274,16 @@ def package_time_series(
         'velocity',
     ]
     [shutil.copy(sbas_dir / f, product_path / f) for f in to_keep]
-    shutil.make_archive(product_path, 'zip', product_path)
+    shutil.make_archive(str(product_path), 'zip', product_path)
     return zip_path
 
 
 def time_series(
     granules: Iterable[str],
     bounds: list[float],
+    use_gslc_prefix: bool,
     bucket: str = None,
     bucket_prefix: str = '',
-    gslc_bucket: str = None,
-    gslc_bucket_prefix: str = '',
     work_dir: Optional[Path] = None,
 ) -> None:
     """Create and package a time series stack from a set of Sentinel-1 GSLCs.
@@ -294,10 +291,9 @@ def time_series(
     Args:
         granules: List of Sentinel-1 GSLCs
         bounds: bounding box that was used to generate the GSLCs
+        use_gslc_prefix: Whether to download input granules from S3
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
-        gslc_bucket: AWS S3 bucket containing GSLCs for time-series processing
-        gslc_bucket_prefix: Path to GSLCs within gslc_bucket.
         work_dir: Working directory for processing
     """
     if work_dir is None:
@@ -306,13 +302,15 @@ def time_series(
     if not sbas_dir.exists():
         mkdir(sbas_dir)
 
-    if granules and gslc_bucket:
-        raise ValueError('One of a list of granules or a s3 bucket must be provided, but got both.')
+    if not (granules or use_gslc_prefix):
+        raise ValueError('use_gslc_prefix must be True if granules not provided')
 
-    if granules == []:
-        if gslc_bucket is None:
-            raise ValueError('Either a list of granules or a s3 bucket must be provided, but got neither.')
-        granules = get_gslc_uris_from_s3(gslc_bucket, gslc_bucket_prefix)
+    if use_gslc_prefix:
+        if granules:
+            raise ValueError('granules must not be provided if use_gslc_prefix is True')
+        if not (bucket and bucket_prefix):
+            raise ValueError('bucket and bucket_prefix must be given if use_gslc_prefix is True')
+        granules = get_gslc_uris_from_s3(bucket, f'{bucket_prefix}/GSLC_granules')
 
     granule_names = load_products(granules)
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
@@ -338,16 +336,33 @@ def main():
         S1A_IW_RAW__0SDV_20231229T134404_20231229T134436_051870_064437_5F38.geo
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        '--bounds', default=None, type=float, nargs=4, help='Bounding box that was used to generate the GSLCs'
-    )
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
-    parser.add_argument('--gslc-bucket', help='AWS S3 bucket containing GSLCs to process')
-    parser.add_argument('--gslc-bucket-prefix', default='', help='Path to GSLCs within gslc-bucket.')
+    parser.add_argument(
+        '--bounds',
+        default=None,
+        type=str.split,
+        nargs='+',
+        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].'
+    )
+    parser.add_argument(
+        '--use-gslc-prefix',
+        action='store_true',
+        help=(
+            'Download GSLC input granules from a subprefix located within the bucket and prefix given by the'
+            ' --bucket and --bucket-prefix options'
+        )
+    )
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
+
     args.granules = [item for sublist in args.granules for item in sublist]
+
+    if args.bounds is not None:
+        args.bounds = [float(item) for sublist in args.bounds for item in sublist]
+        if len(args.bounds) != 4:
+            parser.error('Bounds must have exactly 4 values: [min lon, min lat, max lon, max lat] in EPSG:4326.')
+
     time_series(**args.__dict__)
 
 
