@@ -1,7 +1,12 @@
-FROM condaforge/mambaforge:latest as builder
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 as builder
 
-ENV USEGPU=false
+# FIXME: should be able to find this dynamically
+ARG GPU_ARCH=89
+
+# GPU_ARCH and USEGPU environment variable used by build_proc.sh
 ENV FFTW_LIB=/usr/lib/x86_64-linux-gnu/libfftw3f.a
+ENV GPU_ARCH=${GPU_ARCH}
+ENV USEGPU=true
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl git build-essential gfortran libfftw3-dev && \
@@ -12,12 +17,12 @@ COPY . /hyp3-srg/
 COPY ./scripts/build_proc.sh ./srg
 RUN cd /srg && ./build_proc.sh && cd /
 
-FROM condaforge/mambaforge:latest as runner
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04 as runner
 
 # For opencontainers label definitions, see:
 #    https://github.com/opencontainers/image-spec/blob/master/annotations.md
 LABEL org.opencontainers.image.title="HyP3 SRG"
-LABEL org.opencontainers.image.description="HyP3 plugin for Stanford Radar Group SAR processing"
+LABEL org.opencontainers.image.description="HyP3 plugin for Stanford Radar Group Processor SAR processing"
 LABEL org.opencontainers.image.vendor="Alaska Satellite Facility"
 LABEL org.opencontainers.image.authors="ASF Tools Team <UAF-asf-apd@alaska.edu>"
 LABEL org.opencontainers.image.licenses="BSD-3-Clause"
@@ -27,13 +32,30 @@ LABEL org.opencontainers.image.documentation="https://hyp3-docs.asf.alaska.edu"
 
 ARG CONDA_UID=1000
 ARG CONDA_GID=1000
+ARG MINIFORGE_NAME=Miniforge3
+ARG MINIFORGE_VERSION=24.3.0-0
 
-ENV PROC_HOME=/srg
+ENV CONDA_DIR=/opt/conda
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH=${CONDA_DIR}/bin:${PATH}
 ENV PYTHONDONTWRITEBYTECODE=true
+ENV PROC_HOME=/srg
 ENV MYHOME=/home/conda
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --no-install-recommends unzip vim curl gfortran && \
+# Conda setup
+RUN apt-get update && apt-get install --no-install-recommends --yes wget bzip2 ca-certificates git > /dev/null && \
+    wget --no-hsts --quiet https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/${MINIFORGE_NAME}-${MINIFORGE_VERSION}-Linux-$(uname -m).sh -O /tmp/miniforge.sh && \
+    /bin/bash /tmp/miniforge.sh -b -p ${CONDA_DIR} && \
+    rm /tmp/miniforge.sh && \
+    conda clean --tarballs --index-cache --packages --yes && \
+    find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+    find ${CONDA_DIR} -follow -type f -name '*.pyc' -delete && \
+    conda clean --force-pkgs-dirs --all --yes  && \
+    echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> /etc/skel/.bashrc && \
+    echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> ~/.bashrc
+
+RUN apt-get install -y --no-install-recommends unzip vim curl gfortran && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd -g "${CONDA_GID}" --system conda && \
