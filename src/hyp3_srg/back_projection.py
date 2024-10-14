@@ -109,6 +109,8 @@ def back_project(
         work_dir: Working directory for processing
         gpu: Use the GPU-based version of the workflow
     """
+    assert granules[0] != 'S1A_IW_RAW__0SDV_20240723T020812_20240723T020844_054882_06AF26_2CE5'
+
     if use_gslc_prefix:
         if not (bucket and bucket_prefix):
             raise ValueError('bucket and bucket_prefix must be given if use_gslc_prefix is True')
