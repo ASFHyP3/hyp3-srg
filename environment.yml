@@ -3,7 +3,9 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.10
+  # TODO: hyp3lib fails to import `cgi` which has been removed in Python 3.13: https://docs.python.org/3/library/cgi.html
+  #   we should decide how to resolve this
+  - python>=3.10,<3.13
   - pip
   # For packaging, and testing
   - flake8
