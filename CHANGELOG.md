@@ -8,8 +8,16 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.8.1]
 
+### Added
+* A `--use-gslc-prefix` option has been added to the `back_projection` and `time_series` workflows:
+  * This option causes `back_projection` to upload the GSLC outputs to a `GSLC_granules/` subprefix located within the S3 bucket and prefix given by the `--bucket` and `--bucket-prefix` options.
+  * This option causes `time_series` to download the GSLC inputs from the `GSLC_granules/` subprefix located within the bucket and prefix given by the `--bucket` and `--bucket-prefix` options.
+
 ### Changed
-* `time_series` can now search an s3 bucket for GSLCs (using `--gslc-bucket` and `--gslc-bucket-prefix`) if no GSLC granules are explicitly provided
+* Releases and test deployments now trigger a Docker build for both a GPU-based image and a CPU-based image. The GPU image tag ends with `.gpu` and the CPU image tag ends with `.cpu`.
+
+### Fixed
+* Fixed the parsing for the `--bounds` option for `time_series`.
 
 ## [0.8.0]
 
