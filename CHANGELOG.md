@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.8.1]
+## [0.9.0]
 
 ### Added
 * A `--use-gslc-prefix` option has been added to the `back_projection` and `time_series` workflows:
