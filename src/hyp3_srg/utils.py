@@ -13,6 +13,7 @@ from s1_orbits import fetch_for_scene
 from shapely.geometry import Polygon, shape
 
 
+S3 = client('s3')
 log = logging.getLogger(__name__)
 EARTHDATA_HOST = 'urs.earthdata.nasa.gov'
 
@@ -275,7 +276,6 @@ def download_from_s3(uri: str, dest_dir: Optional[Path] = None) -> None:
         uri: URI of the file to download
         dest_dir: the directory to place the downloaded file in
     """
-    S3 = client('s3')
     bucket, key, out_path = get_s3_args(uri, dest_dir)
     S3.download_file(bucket, key, out_path)
     return out_path
