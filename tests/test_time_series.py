@@ -58,15 +58,11 @@ def test_get_gslc_uris_from_s3(monkeypatch):
             {
                 'Key':  f'{prefix}/S1A_IW_RAW_foo.bad_extension'
             },
-            {
-                'Key':  f'{prefix}/S1B_IW_RAW_bar.geo'
-            }
         ]
     }
 
     correct_uris = [
         f's3://{bucket}/{prefix}/S1A_IW_RAW_foo.zip',
-        f's3://{bucket}/{prefix}/S1B_IW_RAW_bar.geo'
     ]
 
     with monkeypatch.context() as m:
@@ -74,6 +70,4 @@ def test_get_gslc_uris_from_s3(monkeypatch):
         m.setattr(utils, 's3_list_objects', mock_s3_list_objects)
 
         uris = time_series.get_gslc_uris_from_s3(bucket, prefix)
-        assert uris == correct_uris
-        uris = time_series.get_gslc_uris_from_s3(f's3://{bucket}/', prefix)
         assert uris == correct_uris

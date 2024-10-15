@@ -31,11 +31,10 @@ def get_gslc_uris_from_s3(bucket: str, prefix: str = '') -> list[str]:
     Returns:
         uris: a list of uris to the zip files
     """
-    bucket = bucket.replace('s3:', '').replace('/', '')
     res = utils.s3_list_objects(bucket, prefix)
 
     def is_valid_key(key):
-        return (key.endswith('.zip') or key.endswith('.geo')) and re.search('S1[AB]_IW_RAW', key.split('/')[-1])
+        return key.endswith('.zip') and re.search('S1[AB]_IW_RAW', key.split('/')[-1])
 
     keys = [item['Key'] for item in res['Contents'] if is_valid_key(item['Key'])]
     uris = ['/'.join(['s3://' + bucket, key]) for key in keys]
