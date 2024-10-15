@@ -34,7 +34,7 @@ jobs:
       release_branch: main
       develop_branch: develop
       user: tools-bot
-      file: Dockerfile.cpu
+      file: Dockerfile
     secrets:
       USER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -47,6 +47,6 @@ jobs:
       release_branch: main
       develop_branch: develop
       user: tools-bot
-      file: Dockerfile
+      file: Dockerfile.gpu
     secrets:
       USER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
