@@ -41,33 +41,3 @@ def test_get_size_from_dem(tmp_path):
         rsc_file.write(rsc_content.strip())
     dem_width, dem_height = time_series.get_size_from_dem(dem_path=rsc_path)
     assert dem_width, dem_height == (1235, 873)
-
-
-def test_get_gslc_uris_from_s3(monkeypatch):
-    bucket = 'bucket'
-    prefix = 'prefix'
-
-    mock_response = {
-        'Contents': [
-            {
-                'Key': f'{prefix}/S1A_IW_RAW_foo.zip'
-            },
-            {
-                'Key':  f'{prefix}/prefibad_key.zip'
-            },
-            {
-                'Key':  f'{prefix}/S1A_IW_RAW_foo.bad_extension'
-            },
-        ]
-    }
-
-    correct_uris = [
-        f's3://{bucket}/{prefix}/S1A_IW_RAW_foo.zip',
-    ]
-
-    with monkeypatch.context() as m:
-        mock_s3_list_objects = mock.Mock(return_value=mock_response)
-        m.setattr(utils, 's3_list_objects', mock_s3_list_objects)
-
-        uris = time_series.get_gslc_uris_from_s3(bucket, prefix)
-        assert uris == correct_uris
