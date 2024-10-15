@@ -1,6 +1,4 @@
-from unittest import mock
-
-from hyp3_srg import time_series, utils
+from hyp3_srg import time_series
 
 
 def test_create_time_series_product_name():
