@@ -263,7 +263,6 @@ def s3_list_objects(bucket: str, prefix: str = '') -> dict:
     Returns:
         res: dictionary containing the response
     """
-    S3 = client('s3')
     bucket = bucket.replace('s3:', '').replace('/', '')
     res = S3.list_objects(Bucket=bucket, Prefix=prefix)
     return res
