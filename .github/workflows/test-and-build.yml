@@ -28,7 +28,7 @@ jobs:
   call-docker-ghcr-workflow-cpu:
     needs: call-version-info-workflow
     # Docs: https://github.com/ASFHyP3/actions
-    uses: ASFHyP3/actions/.github/workflows/reusable-docker-ghcr.yml@specify-docker-file
+    uses: ASFHyP3/actions/.github/workflows/reusable-docker-ghcr.yml@develop  # TODO: pin to latest release
     with:
       version_tag: ${{ needs.call-version-info-workflow.outputs.version_tag }}.cpu
       release_branch: main
@@ -41,7 +41,7 @@ jobs:
   call-docker-ghcr-workflow-gpu:
     needs: call-version-info-workflow
     # Docs: https://github.com/ASFHyP3/actions
-    uses: ASFHyP3/actions/.github/workflows/reusable-docker-ghcr.yml@specify-docker-file
+    uses: ASFHyP3/actions/.github/workflows/reusable-docker-ghcr.yml@develop  # TODO: pin to latest release
     with:
       version_tag: ${{ needs.call-version-info-workflow.outputs.version_tag }}.gpu
       release_branch: main
