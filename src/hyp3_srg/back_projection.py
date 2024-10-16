@@ -92,6 +92,7 @@ def back_project(
     earthdata_password: str = None,
     bucket: str = None,
     bucket_prefix: str = '',
+    use_gslc_prefix: bool = False,
     work_dir: Optional[Path] = None,
     gpu: bool = False,
 ):
@@ -104,9 +105,15 @@ def back_project(
         earthdata_password: Password for NASA's EarthData service
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
+        use_gslc_prefix: Upload GSLCs to a subprefix
         work_dir: Working directory for processing
         gpu: Use the GPU-based version of the workflow
     """
+    if use_gslc_prefix:
+        if not (bucket and bucket_prefix):
+            raise ValueError('bucket and bucket_prefix must be given if use_gslc_prefix is True')
+        bucket_prefix += '/GSLC_granules'
+
     utils.set_creds('EARTHDATA', earthdata_username, earthdata_password)
     if work_dir is None:
         work_dir = Path.cwd()
@@ -149,6 +156,14 @@ def main():
     parser.add_argument('--earthdata-password', default=None, help="Password for NASA's EarthData")
     parser.add_argument('--bucket', help='AWS S3 bucket HyP3 for upload the final product(s)')
     parser.add_argument('--bucket-prefix', default='', help='Add a bucket prefix to product(s)')
+    parser.add_argument(
+        '--use-gslc-prefix',
+        action='store_true',
+        help=(
+            'Upload GSLC granules to a subprefix located within the bucket and prefix given by the'
+            ' --bucket and --bucket-prefix options'
+        )
+    )
     parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
     parser.add_argument(
         '--bounds',
@@ -159,11 +174,14 @@ def main():
     )
     parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
     args = parser.parse_args()
+
     args.granules = [item for sublist in args.granules for item in sublist]
+
     if args.bounds is not None:
         args.bounds = [float(item) for sublist in args.bounds for item in sublist]
         if len(args.bounds) != 4:
             parser.error('Bounds must have exactly 4 values: [min lon, min lat, max lon, max lat] in EPSG:4326.')
+
     back_project(**args.__dict__)
 
 
