@@ -5,6 +5,7 @@ GSLC back-projection processing
 import argparse
 import logging
 import os
+import random
 import zipfile
 from pathlib import Path
 from typing import Iterable, Optional
@@ -109,6 +110,8 @@ def back_project(
         work_dir: Working directory for processing
         gpu: Use the GPU-based version of the workflow
     """
+    assert random.randint(0, 2) == 0
+
     if use_gslc_prefix:
         if not (bucket and bucket_prefix):
             raise ValueError('bucket and bucket_prefix must be given if use_gslc_prefix is True')

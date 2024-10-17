@@ -4,6 +4,7 @@ Sentinel-1 GSLC time series processing
 
 import argparse
 import logging
+import random
 import shutil
 from os import mkdir
 from pathlib import Path
@@ -290,6 +291,8 @@ def time_series(
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
     """
+    assert random.randint(0, 2) == 0
+
     if work_dir is None:
         work_dir = Path.cwd()
     sbas_dir = work_dir / 'sbas'
