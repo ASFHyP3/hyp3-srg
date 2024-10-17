@@ -32,7 +32,7 @@ def download_dem_for_srg(bounds: list[float], work_dir: Optional[Path]):
 
     Args:
         bounds: The bounds of the extent of the desired DEM - [min_lon, min_lat, max_lon, max_lat].
-        work_dir: The directory to save create the DEM in
+        work_dir: The directory to save the DEM in
 
     Returns:
         The path to the downloaded DEM

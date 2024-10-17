@@ -85,3 +85,11 @@ def test_call_stanford_module(monkeypatch):
         m.setenv('PROC_HOME', '.')
         utils.call_stanford_module('foo/bar.py', ['arg1', 'arg2'])
         mock_run.assert_called_once_with([Path('foo/bar.py'), 'arg1', 'arg2'], cwd=Path.cwd(), check=True)
+
+
+def test_get_s3_args():
+    s3_uri_1 = 's3://foo/bar.zip'
+    s3_uri_2 = 's3://foo/bing/bong/bar.zip'
+    dest_dir = Path('output')
+    assert utils.get_s3_args(s3_uri_1) == ('foo', 'bar.zip', Path.cwd() / "bar.zip")
+    assert utils.get_s3_args(s3_uri_2, dest_dir) == ('foo', 'bing/bong/bar.zip', dest_dir / 'bar.zip')
