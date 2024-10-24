@@ -14,7 +14,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   * This option causes `time_series` to download the GSLC inputs from the `GSLC_granules/` subprefix located within the bucket and prefix given by the `--bucket` and `--bucket-prefix` options.
 
 ### Changed
-* Releases and test deployments now trigger a Docker build for both a GPU-based image and a CPU-based image. The GPU image tag ends with `.gpu` and the CPU image tag ends with `.cpu`.
+* Releases and test deployments now trigger a Docker build for the GPU container, rather than the CPU container.
 
 ### Fixed
 * Fixed the parsing for the `--bounds` option for `time_series`.
