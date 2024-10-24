@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from hyp3_srg import time_series
 
 
@@ -39,13 +37,5 @@ def test_get_size_from_dem(tmp_path):
     rsc_path = tmp_path / 'elevation.dem.rsc'
     with open(rsc_path, 'w') as rsc_file:
         rsc_file.write(rsc_content.strip())
-    dem_width, dem_height = time_series.get_size_from_dem(dem_file=rsc_path)
+    dem_width, dem_height = time_series.get_size_from_dem(dem_path=rsc_path)
     assert dem_width, dem_height == (1235, 873)
-
-
-def test_get_s3_args():
-    s3_uri_1 = 's3://foo/bar.zip'
-    s3_uri_2 = 's3://foo/bing/bong/bar.zip'
-    dest_dir = Path('output')
-    assert time_series.get_s3_args(s3_uri_1) == ('foo', 'bar.zip', Path.cwd() / "bar.zip")
-    assert time_series.get_s3_args(s3_uri_2, dest_dir) == ('foo', 'bing/bong/bar.zip', dest_dir / 'bar.zip')

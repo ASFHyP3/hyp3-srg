@@ -77,20 +77,16 @@ aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/gpu
 ### GPU Docker Container
 Once you have a compute environment set up as described above, you can build the GPU version of the container by running:
 ```bash
-docker build --build-arg="GPU_ARCH={YOUR_ARCH}" -t ghcr.io/asfhyp3/hyp3-srg:{RELEASE}.gpu -f Dockerfile.gpu .
+docker build --build-arg="GPU_ARCH={YOUR_ARCH}" -t srg -f Dockerfile.gpu .
 ```
 
 You can get the value of `COMPUTE_CAPABILITY_VERSION` by running `nvidia-smi` on the instance to obtain GPU type, then cross-reference this information with NVIDIA's [GPU type compute capability list](https://developer.nvidia.com/cuda-gpus). For a g6.2xlarge instance, this would be:
 ```bash
-docker --build-arg="GPU_ARCH=89" -t ghcr.io/asfhyp3/hyp3-srg:{RELEASE}.gpu -f Dockerfile.gpu .
+docker --build-arg="GPU_ARCH=89" -t srg -f Dockerfile.gpu .
 ```
 The compute capability version will always be the same for a given instance type, so you will only need to look this up once per instance type.
 The default value for this argument is `89` - the correct value for g6.2xlarge instances.
 **THE COMPUTE CAPABILITY VERSION MUST MATCH ON BOTH THE BUILDING AND RUNNING MACHINE!**
-
-The value of `RELEASE` can be obtained from the git tags.
-
-You can push a manual container to HyP3-SRG's container repository by following [this guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#pushing-container-images).
 
 ### EC2 Setup
 > [!CAUTION]
@@ -104,5 +100,5 @@ When running on an EC2 instance, the following setup is recommended:
     3. Use the latest AWS ECS-optimized GPU AMI (`aws ssm get-parameters --names /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended --region us-west-2`)
 3. Build the GPU docker container with the correct compute capability version (see section above). To determine this value, run `nvidia-smi` on the instance to obtain GPU type, then cross-referencke this information with NVIDIA's [GPU type compute capability list](https://developer.nvidia.com/cuda-gpus). For a g6.2xlarge instance, this would be:
 ```bash
-docker --build-arg="GPU_ARCH=89" -t ghcr.io/asfhyp3/hyp3-srg:{RELEASE}.gpu -f Dockerfile.gpu .
+docker --build-arg="GPU_ARCH=89" -t srg -f Dockerfile.gpu .
 ```

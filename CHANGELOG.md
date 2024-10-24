@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0]
+
+### Added
+* A new `--use-gslc-prefix` option has been added to the `back_projection` and `time_series` workflows:
+  * This option causes `back_projection` to upload the GSLC outputs to a `GSLC_granules/` subprefix located within the S3 bucket and prefix given by the `--bucket` and `--bucket-prefix` options.
+  * This option causes `time_series` to download the GSLC inputs from the `GSLC_granules/` subprefix located within the bucket and prefix given by the `--bucket` and `--bucket-prefix` options.
+
+### Changed
+* Releases and test deployments now trigger a Docker build for the GPU container, rather than the CPU container.
+
+### Fixed
+* Fixed the parsing for the `--bounds` option for `time_series`.
+
 ## [0.8.0]
 
 ### Added
