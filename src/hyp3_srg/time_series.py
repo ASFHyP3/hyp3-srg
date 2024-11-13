@@ -290,6 +290,7 @@ def time_series(
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
     """
+    assert False
     if work_dir is None:
         work_dir = Path.cwd()
     sbas_dir = work_dir / 'sbas'
