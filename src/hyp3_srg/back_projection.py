@@ -162,17 +162,27 @@ def main():
         help=(
             'Upload GSLC granules to a subprefix located within the bucket and prefix given by the'
             ' --bucket and --bucket-prefix options'
-        )
+        ),
     )
-    parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
+    parser.add_argument(
+        '--gpu',
+        default=False,
+        action='store_true',
+        help='Use the GPU-based version of the workflow.',
+    )
     parser.add_argument(
         '--bounds',
         default=None,
         type=str.split,
         nargs='+',
-        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].'
+        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].',
     )
-    parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
+    parser.add_argument(
+        'granules',
+        type=str.split,
+        nargs='+',
+        help='Level-0 S1 granule(s) to back-project.',
+    )
     args = parser.parse_args()
 
     args.granules = [item for sublist in args.granules for item in sublist]

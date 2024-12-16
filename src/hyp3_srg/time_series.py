@@ -87,7 +87,10 @@ def get_size_from_dem(dem_path: str) -> tuple[int, int]:
 
 
 def generate_wrapped_interferograms(
-    looks: tuple[int, int], baselines: tuple[int, int], dem_shape: tuple[int, int], work_dir: Path
+    looks: tuple[int, int],
+    baselines: tuple[int, int],
+    dem_shape: tuple[int, int],
+    work_dir: Path,
 ) -> None:
     """Generates wrapped interferograms from GSLCs
 
@@ -101,9 +104,22 @@ def generate_wrapped_interferograms(
     looks_down, looks_across = looks
     time_baseline, spatial_baseline = baselines
 
-    utils.call_stanford_module('sentinel/sbas_list.py', args=[time_baseline, spatial_baseline], work_dir=work_dir)
+    utils.call_stanford_module(
+        'sentinel/sbas_list.py',
+        args=[time_baseline, spatial_baseline],
+        work_dir=work_dir,
+    )
 
-    sbas_args = ['sbas_list', '../elevation.dem.rsc', 1, 1, dem_width, dem_length, looks_down, looks_across]
+    sbas_args = [
+        'sbas_list',
+        '../elevation.dem.rsc',
+        1,
+        1,
+        dem_width,
+        dem_length,
+        looks_down,
+        looks_across,
+    ]
     utils.call_stanford_module('sentinel/ps_sbas_igrams.py', args=sbas_args, work_dir=work_dir)
 
 
@@ -118,13 +134,22 @@ def unwrap_interferograms(dem_shape: tuple[int, int], unw_shape: tuple[int, int]
     dem_width, dem_length = dem_shape
     unw_width, unw_length = unw_shape
 
-    reduce_dem_args = ['../elevation.dem', 'dem', dem_width, dem_width // unw_width, dem_length // unw_length]
+    reduce_dem_args = [
+        '../elevation.dem',
+        'dem',
+        dem_width,
+        dem_width // unw_width,
+        dem_length // unw_length,
+    ]
     utils.call_stanford_module('util/nbymi2', args=reduce_dem_args, work_dir=work_dir)
     utils.call_stanford_module('util/unwrap_parallel.py', args=[unw_width], work_dir=work_dir)
 
 
 def compute_sbas_velocity_solution(
-    threshold: float, do_tropo_correction: bool, unw_shape: tuple[int, int], work_dir: Path
+    threshold: float,
+    do_tropo_correction: bool,
+    unw_shape: tuple[int, int],
+    work_dir: Path,
 ) -> None:
     """Computes the sbas velocity solution from the unwrapped interferograms
 
@@ -180,7 +205,10 @@ def create_time_series(
     unwrap_interferograms(dem_shape=dem_shape, unw_shape=unw_shape, work_dir=work_dir)
 
     compute_sbas_velocity_solution(
-        threshold=threshold, do_tropo_correction=do_tropo_correction, unw_shape=unw_shape, work_dir=work_dir
+        threshold=threshold,
+        do_tropo_correction=do_tropo_correction,
+        unw_shape=unw_shape,
+        work_dir=work_dir,
     )
 
 
@@ -197,11 +225,11 @@ def create_time_series_product_name(
     Returns:
         the product name as a string.
     """
-    prefix = "S1_SRG_SBAS"
-    split_names = [granule.split("_") for granule in granule_names]
+    prefix = 'S1_SRG_SBAS'
+    split_names = [granule.split('_') for granule in granule_names]
 
     absolute_orbit = split_names[0][7]
-    if split_names[0][0] == "S1A":
+    if split_names[0][0] == 'S1A':
         relative_orbit = str(((int(absolute_orbit) - 73) % 175) + 1)
     else:
         relative_orbit = str(((int(absolute_orbit) - 27) % 175) + 1)
@@ -216,24 +244,22 @@ def create_time_series_product_name(
     def lon_string(lon):
         return ('E' if lon >= 0 else 'W') + f"{('%.1f' % abs(lon)).zfill(5)}".replace('.', '_')
 
-    return '_'.join([
-        prefix,
-        relative_orbit,
-        lon_string(bounds[0]),
-        lat_string(bounds[1]),
-        lon_string(bounds[2]),
-        lat_string(bounds[3]),
-        earliest_granule,
-        latest_granule,
-        token_hex(2).upper()
-    ])
+    return '_'.join(
+        [
+            prefix,
+            relative_orbit,
+            lon_string(bounds[0]),
+            lat_string(bounds[1]),
+            lon_string(bounds[2]),
+            lat_string(bounds[3]),
+            earliest_granule,
+            latest_granule,
+            token_hex(2).upper(),
+        ]
+    )
 
 
-def package_time_series(
-        granules: list[str],
-        bounds: list[float],
-        work_dir: Optional[Path] = None
-) -> Path:
+def package_time_series(granules: list[str], bounds: list[float], work_dir: Optional[Path] = None) -> Path:
     """Package the time series into a product zip file.
 
     Args:
@@ -337,7 +363,7 @@ def main():
         default=None,
         type=str.split,
         nargs='+',
-        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].'
+        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].',
     )
     parser.add_argument(
         '--use-gslc-prefix',
@@ -345,7 +371,7 @@ def main():
         help=(
             'Download GSLC input granules from a subprefix located within the bucket and prefix given by the'
             ' --bucket and --bucket-prefix options'
-        )
+        ),
     )
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()

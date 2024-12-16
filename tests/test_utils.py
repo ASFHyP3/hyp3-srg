@@ -58,7 +58,10 @@ def test_find_creds_in_env(monkeypatch):
     with monkeypatch.context() as m:
         m.setenv('TEST_USERNAME', 'foo')
         m.setenv('TEST_PASSWORD', 'bar')
-        assert utils.find_creds_in_env('TEST_USERNAME', 'TEST_PASSWORD') == ('foo', 'bar')
+        assert utils.find_creds_in_env('TEST_USERNAME', 'TEST_PASSWORD') == (
+            'foo',
+            'bar',
+        )
 
     with monkeypatch.context() as m:
         m.delenv('TEST_USERNAME', raising=False)
@@ -91,5 +94,9 @@ def test_get_s3_args():
     s3_uri_1 = 's3://foo/bar.zip'
     s3_uri_2 = 's3://foo/bing/bong/bar.zip'
     dest_dir = Path('output')
-    assert utils.get_s3_args(s3_uri_1) == ('foo', 'bar.zip', Path.cwd() / "bar.zip")
-    assert utils.get_s3_args(s3_uri_2, dest_dir) == ('foo', 'bing/bong/bar.zip', dest_dir / 'bar.zip')
+    assert utils.get_s3_args(s3_uri_1) == ('foo', 'bar.zip', Path.cwd() / 'bar.zip')
+    assert utils.get_s3_args(s3_uri_2, dest_dir) == (
+        'foo',
+        'bing/bong/bar.zip',
+        dest_dir / 'bar.zip',
+    )

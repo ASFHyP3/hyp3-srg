@@ -1,6 +1,7 @@
 """
 HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 """
+
 import argparse
 import sys
 from importlib.metadata import entry_points
