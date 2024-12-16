@@ -13,9 +13,9 @@ from s1_orbits import fetch_for_scene
 from shapely.geometry import Polygon, shape
 
 
-S3 = client("s3")
+S3 = client('s3')
 log = logging.getLogger(__name__)
-EARTHDATA_HOST = "urs.earthdata.nasa.gov"
+EARTHDATA_HOST = 'urs.earthdata.nasa.gov'
 
 
 def get_proc_home() -> Path:
@@ -24,11 +24,9 @@ def get_proc_home() -> Path:
     Returns:
         Path to the PROC_HOME directory
     """
-    proc_home = os.environ.get("PROC_HOME", None)
+    proc_home = os.environ.get('PROC_HOME', None)
     if proc_home is None:
-        raise ValueError(
-            "PROC_HOME environment variable is not set. Location of Stanford modules is unknown."
-        )
+        raise ValueError('PROC_HOME environment variable is not set. Location of Stanford modules is unknown.')
     return Path(proc_home)
 
 
@@ -38,7 +36,7 @@ def get_netrc() -> Path:
     Returns:
         Path to the netrc file
     """
-    netrc_name = "_netrc" if system().lower() == "windows" else ".netrc"
+    netrc_name = '_netrc' if system().lower() == 'windows' else '.netrc'
     netrc_file = Path.home() / netrc_name
     return netrc_file
 
@@ -54,10 +52,10 @@ def set_creds(service, username, password) -> None:
         password: Password for the service
     """
     if username is not None:
-        os.environ[f"{service.upper()}_USERNAME"] = username
+        os.environ[f'{service.upper()}_USERNAME'] = username
 
     if password is not None:
-        os.environ[f"{service.upper()}_PASSWORD"] = password
+        os.environ[f'{service.upper()}_PASSWORD'] = password
 
 
 def find_creds_in_env(username_name, password_name) -> Tuple[str, str]:
@@ -104,7 +102,7 @@ def get_earthdata_credentials() -> Tuple[str, str]:
     Returns:
         Tuple of the NASA EarthData username and password
     """
-    username, password = find_creds_in_env("EARTHDATA_USERNAME", "EARTHDATA_PASSWORD")
+    username, password = find_creds_in_env('EARTHDATA_USERNAME', 'EARTHDATA_PASSWORD')
     if username and password:
         return username, password
 
@@ -113,14 +111,12 @@ def get_earthdata_credentials() -> Tuple[str, str]:
         return username, password
 
     raise ValueError(
-        "Please provide NASA EarthData credentials via the "
-        "EARTHDATA_USERNAME and EARTHDATA_PASSWORD environment variables, or your netrc file."
+        'Please provide NASA EarthData credentials via the '
+        'EARTHDATA_USERNAME and EARTHDATA_PASSWORD environment variables, or your netrc file.'
     )
 
 
-def download_raw_granule(
-    granule_name: str, output_dir: Path, unzip: bool = False
-) -> Tuple[Path, Polygon]:
+def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = False) -> Tuple[Path, Polygon]:
     """Download a S1 granule using asf_search. Return its path
     and buffered extent.
 
@@ -134,25 +130,25 @@ def download_raw_granule(
     """
     username, password = get_earthdata_credentials()
     session = asf_search.ASFSession().auth_with_creds(username, password)
-    if not granule_name.endswith("-RAW"):
-        granule_name += "-RAW"
+    if not granule_name.endswith('-RAW'):
+        granule_name += '-RAW'
 
     result = asf_search.granule_search([granule_name])[0]
-    bbox = shape(result.geojson()["geometry"])
+    bbox = shape(result.geojson()['geometry'])
 
-    zip_path = output_dir / f"{granule_name[:-4]}.zip"
+    zip_path = output_dir / f'{granule_name[:-4]}.zip'
     if not unzip:
         out_path = zip_path
         if not out_path.exists():
             result.download(path=output_dir, session=session)
     else:
-        out_path = output_dir / f"{granule_name[:-4]}.SAFE"
+        out_path = output_dir / f'{granule_name[:-4]}.SAFE'
         if not out_path.exists() and not zip_path.exists():
             result.download(path=output_dir, session=session)
 
         if not out_path.exists():
-            with ZipFile(zip_path, "r") as zip_ref:
-                zip_ref.extractall(".")
+            with ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall('.')
 
         if zip_path.exists() and unzip:
             zip_path.unlink()
@@ -169,13 +165,13 @@ def get_bbox(granule_name: str) -> Tuple[Path, Polygon]:
     Returns:
         bbox: the buffered extent polygon
     """
-    granule_name = granule_name.split(".")[0]
+    granule_name = granule_name.split('.')[0]
 
-    if not granule_name.endswith("-RAW"):
-        granule_name += "-RAW"
+    if not granule_name.endswith('-RAW'):
+        granule_name += '-RAW'
 
     result = asf_search.granule_search([granule_name])[0]
-    bbox = shape(result.geojson()["geometry"])
+    bbox = shape(result.geojson()['geometry'])
 
     return bbox
 
@@ -204,13 +200,11 @@ def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
         output_dir: Directory to save the parameter file in
     """
     lines = [str(dem_path), str(dem_rsc_path)]
-    with open(output_dir / "params", "w") as f:
-        f.write("\n".join(lines))
+    with open(output_dir / 'params', 'w') as f:
+        f.write('\n'.join(lines))
 
 
-def call_stanford_module(
-    local_name, args: List = [], work_dir: Optional[Path] = None
-) -> None:
+def call_stanford_module(local_name, args: List = [], work_dir: Optional[Path] = None) -> None:
     """Call a Stanford Processor modules (via subprocess) with the given arguments.
 
     Args:
@@ -230,10 +224,10 @@ def call_stanford_module(
 
 def how_many_gpus():
     """Get the number of GPUs available on the system using Stanford script."""
-    cmd = (get_proc_home() / "sentinel" / "howmanygpus").resolve()
+    cmd = (get_proc_home() / 'sentinel' / 'howmanygpus').resolve()
     proc = subprocess.Popen(str(cmd), stdout=subprocess.PIPE, shell=True)
     (param, err) = proc.communicate()
-    ngpus = int(str(param, "UTF-8").split()[0])
+    ngpus = int(str(param, 'UTF-8').split()[0])
     return ngpus
 
 
@@ -252,14 +246,14 @@ def get_s3_args(uri: str, dest_dir: Optional[Path] = None) -> None:
     if dest_dir is None:
         dest_dir = Path.cwd()
 
-    simple_s3_uri = Path(uri.replace("s3://", ""))
+    simple_s3_uri = Path(uri.replace('s3://', ''))
     bucket = simple_s3_uri.parts[0]
-    key = "/".join(simple_s3_uri.parts[1:])
+    key = '/'.join(simple_s3_uri.parts[1:])
     out_path = dest_dir / simple_s3_uri.parts[-1]
     return bucket, key, out_path
 
 
-def s3_list_objects(bucket: str, prefix: str = "") -> dict:
+def s3_list_objects(bucket: str, prefix: str = '') -> dict:
     """List objects in bucket at prefix
 
     Args:
@@ -269,7 +263,7 @@ def s3_list_objects(bucket: str, prefix: str = "") -> dict:
     Returns:
         res: dictionary containing the response
     """
-    bucket = bucket.replace("s3:", "").replace("/", "")
+    bucket = bucket.replace('s3:', '').replace('/', '')
     res = S3.list_objects(Bucket=bucket, Prefix=prefix)
     return res
 
