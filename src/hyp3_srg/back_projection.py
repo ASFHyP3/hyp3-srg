@@ -1,13 +1,11 @@
-"""
-GSLC back-projection processing
-"""
+"""GSLC back-projection processing"""
 
 import argparse
 import logging
 import os
 import zipfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional
 
 from hyp3lib.aws import upload_file_to_s3
 from shapely import unary_union
@@ -93,7 +91,7 @@ def back_project(
     bucket: str = None,
     bucket_prefix: str = '',
     use_gslc_prefix: bool = False,
-    work_dir: Optional[Path] = None,
+    work_dir: Path | None = None,
     gpu: bool = False,
 ):
     """Back-project a set of Sentinel-1 level-0 granules.

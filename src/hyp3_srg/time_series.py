@@ -1,15 +1,13 @@
-"""
-Sentinel-1 GSLC time series processing
-"""
+"""Sentinel-1 GSLC time series processing"""
 
 import argparse
 import logging
 import shutil
+from collections.abc import Iterable
 from os import mkdir
 from pathlib import Path
 from secrets import token_hex
 from shutil import copyfile
-from typing import Iterable, Optional
 
 from hyp3lib.aws import upload_file_to_s3
 from hyp3lib.fetch import download_file as download_from_http
@@ -172,10 +170,10 @@ def compute_sbas_velocity_solution(
         tropo_correct_args = ['unwlist', unw_width, unw_length]
         utils.call_stanford_module('int/tropocorrect.py', args=tropo_correct_args, work_dir=work_dir)
 
-    with open(work_dir / 'unwlist', 'r') as unw_list:
+    with open(work_dir / 'unwlist') as unw_list:
         num_unw_files = len(unw_list.readlines())
 
-    with open(work_dir / 'geolist', 'r') as slc_list:
+    with open(work_dir / 'geolist') as slc_list:
         num_slcs = len(slc_list.readlines())
 
     sbas_velocity_args = ['unwlist', num_unw_files, num_slcs, unw_width, 'ref_locs']
@@ -259,7 +257,7 @@ def create_time_series_product_name(
     )
 
 
-def package_time_series(granules: list[str], bounds: list[float], work_dir: Optional[Path] = None) -> Path:
+def package_time_series(granules: list[str], bounds: list[float], work_dir: Path | None = None) -> Path:
     """Package the time series into a product zip file.
 
     Args:
@@ -304,7 +302,7 @@ def time_series(
     use_gslc_prefix: bool,
     bucket: str = None,
     bucket_prefix: str = '',
-    work_dir: Optional[Path] = None,
+    work_dir: Path | None = None,
 ) -> None:
     """Create and package a time series stack from a set of Sentinel-1 GSLCs.
 
