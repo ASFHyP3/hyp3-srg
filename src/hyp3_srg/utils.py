@@ -4,7 +4,6 @@ import os
 import subprocess
 from pathlib import Path
 from platform import system
-from typing import List, Optional, Tuple
 from zipfile import ZipFile
 
 import asf_search
@@ -58,7 +57,7 @@ def set_creds(service, username, password) -> None:
         os.environ[f'{service.upper()}_PASSWORD'] = password
 
 
-def find_creds_in_env(username_name, password_name) -> Tuple[str, str]:
+def find_creds_in_env(username_name, password_name) -> tuple[str, str]:
     """Find credentials for a service in the environment.
 
     Args:
@@ -76,7 +75,7 @@ def find_creds_in_env(username_name, password_name) -> Tuple[str, str]:
     return None, None
 
 
-def find_creds_in_netrc(service) -> Tuple[str, str]:
+def find_creds_in_netrc(service) -> tuple[str, str]:
     """Find credentials for a service in the netrc file.
 
     Args:
@@ -96,7 +95,7 @@ def find_creds_in_netrc(service) -> Tuple[str, str]:
     return None, None
 
 
-def get_earthdata_credentials() -> Tuple[str, str]:
+def get_earthdata_credentials() -> tuple[str, str]:
     """Get NASA EarthData credentials from the environment or netrc file.
 
     Returns:
@@ -116,7 +115,7 @@ def get_earthdata_credentials() -> Tuple[str, str]:
     )
 
 
-def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = False) -> Tuple[Path, Polygon]:
+def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = False) -> tuple[Path, Polygon]:
     """Download a S1 granule using asf_search. Return its path
     and buffered extent.
 
@@ -156,7 +155,7 @@ def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = Fals
     return out_path, bbox
 
 
-def get_bbox(granule_name: str) -> Tuple[Path, Polygon]:
+def get_bbox(granule_name: str) -> tuple[Path, Polygon]:
     """Get the buffered extent from asf_search.
 
     Args:
@@ -204,7 +203,7 @@ def create_param_file(dem_path: Path, dem_rsc_path: Path, output_dir: Path):
         f.write('\n'.join(lines))
 
 
-def call_stanford_module(local_name, args: List = [], work_dir: Optional[Path] = None) -> None:
+def call_stanford_module(local_name, args: list = [], work_dir: Path | None = None) -> None:
     """Call a Stanford Processor modules (via subprocess) with the given arguments.
 
     Args:
@@ -231,7 +230,7 @@ def how_many_gpus():
     return ngpus
 
 
-def get_s3_args(uri: str, dest_dir: Optional[Path] = None) -> None:
+def get_s3_args(uri: str, dest_dir: Path | None = None) -> None:
     """Retrieve the arguments for downloading from an S3 bucket
 
     Args:
@@ -268,7 +267,7 @@ def s3_list_objects(bucket: str, prefix: str = '') -> dict:
     return res
 
 
-def download_from_s3(uri: str, dest_dir: Optional[Path] = None) -> None:
+def download_from_s3(uri: str, dest_dir: Path | None = None) -> None:
     """Download a file from an S3 bucket
 
     Args:

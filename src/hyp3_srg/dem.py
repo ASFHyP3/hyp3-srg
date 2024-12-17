@@ -1,7 +1,7 @@
 """Prepare a Copernicus GLO-30 DEM virtual raster (VRT) covering a given geometry"""
+
 import logging
 from pathlib import Path
-from typing import Optional
 
 import requests
 
@@ -27,7 +27,7 @@ def ensure_egm_model_available():
                 f.write(chunk)
 
 
-def download_dem_for_srg(bounds: list[float], work_dir: Optional[Path]):
+def download_dem_for_srg(bounds: list[float], work_dir: Path | None):
     """Download the DEM for the given bounds - [min_lon, min_lat, max_lon, max_lat].
 
     Args:
@@ -37,9 +37,9 @@ def download_dem_for_srg(bounds: list[float], work_dir: Optional[Path]):
     Returns:
         The path to the downloaded DEM
     """
-    if (bounds[0] >= bounds[2] or bounds[1] >= bounds[3]):
+    if bounds[0] >= bounds[2] or bounds[1] >= bounds[3]:
         raise ValueError(
-            "Improper bounding box formatting, should be [max latitude, min latitude, min longitude, max longitude]."
+            'Improper bounding box formatting, should be [max latitude, min latitude, min longitude, max longitude].'
         )
 
     dem_path = work_dir / 'elevation.dem'

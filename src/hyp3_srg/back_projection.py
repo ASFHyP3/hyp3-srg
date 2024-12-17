@@ -1,13 +1,11 @@
-"""
-GSLC back-projection processing
-"""
+"""GSLC back-projection processing"""
 
 import argparse
 import logging
 import os
 import zipfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional
 
 from hyp3lib.aws import upload_file_to_s3
 from shapely import unary_union
@@ -93,7 +91,7 @@ def back_project(
     bucket: str = None,
     bucket_prefix: str = '',
     use_gslc_prefix: bool = False,
-    work_dir: Optional[Path] = None,
+    work_dir: Path | None = None,
     gpu: bool = False,
 ):
     """Back-project a set of Sentinel-1 level-0 granules.
@@ -162,17 +160,27 @@ def main():
         help=(
             'Upload GSLC granules to a subprefix located within the bucket and prefix given by the'
             ' --bucket and --bucket-prefix options'
-        )
+        ),
     )
-    parser.add_argument('--gpu', default=False, action='store_true', help='Use the GPU-based version of the workflow.')
+    parser.add_argument(
+        '--gpu',
+        default=False,
+        action='store_true',
+        help='Use the GPU-based version of the workflow.',
+    )
     parser.add_argument(
         '--bounds',
         default=None,
         type=str.split,
         nargs='+',
-        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].'
+        help='DEM extent bbox in EPSG:4326: [min_lon, min_lat, max_lon, max_lat].',
     )
-    parser.add_argument('granules', type=str.split, nargs='+', help='Level-0 S1 granule(s) to back-project.')
+    parser.add_argument(
+        'granules',
+        type=str.split,
+        nargs='+',
+        help='Level-0 S1 granule(s) to back-project.',
+    )
     args = parser.parse_args()
 
     args.granules = [item for sublist in args.granules for item in sublist]
