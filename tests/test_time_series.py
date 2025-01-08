@@ -7,7 +7,7 @@ def test_create_time_series_product_name():
         'S1A_IW_RAW__0SDV_004_005_054882_06AF26_2CE5.zip',
         'S1A_IW_RAW__0SDV_010_020_055057_06B527_1346.zip',
     ]
-    bounds = [-100., 45., -90., 50.]
+    bounds = [-100.0, 45.0, -90.0, 50.0]
     name = time_series.create_time_series_product_name(granule_names, bounds)
     assert name.startswith('S1_SRG_SBAS_35_W100_0_N45_0_W090_0_N50_0_001_010')
 
