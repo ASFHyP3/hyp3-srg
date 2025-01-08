@@ -57,7 +57,7 @@ def set_creds(service, username, password) -> None:
         os.environ[f'{service.upper()}_PASSWORD'] = password
 
 
-def find_creds_in_env(username_name, password_name) -> tuple[str, str]:
+def find_creds_in_env(username_name, password_name) -> tuple[str | None, str | None]:
     """Find credentials for a service in the environment.
 
     Args:
@@ -75,7 +75,7 @@ def find_creds_in_env(username_name, password_name) -> tuple[str, str]:
     return None, None
 
 
-def find_creds_in_netrc(service) -> tuple[str, str]:
+def find_creds_in_netrc(service) -> tuple[str | None, str | None]:
     """Find credentials for a service in the netrc file.
 
     Args:
@@ -186,7 +186,7 @@ def download_orbit(granule_name: str, output_dir: Path) -> Path:
     Returns:
         Path to the downloaded orbit file
     """
-    orbit_path = str(fetch_for_scene(granule_name, dir=output_dir))
+    orbit_path = fetch_for_scene(granule_name, dir=output_dir)
     return orbit_path
 
 
@@ -230,7 +230,7 @@ def how_many_gpus():
     return ngpus
 
 
-def get_s3_args(uri: str, dest_dir: Path | None = None) -> None:
+def get_s3_args(uri: str, dest_dir: Path | None = None) -> tuple[str, str, Path]:
     """Retrieve the arguments for downloading from an S3 bucket
 
     Args:
@@ -267,7 +267,7 @@ def s3_list_objects(bucket: str, prefix: str = '') -> dict:
     return res
 
 
-def download_from_s3(uri: str, dest_dir: Path | None = None) -> None:
+def download_from_s3(uri: str, dest_dir: Path | None = None) -> Path:
     """Download a file from an S3 bucket
 
     Args:
