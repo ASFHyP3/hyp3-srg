@@ -181,11 +181,11 @@ def compute_sbas_velocity_solution(
 
 
 def create_time_series(
+    work_dir: Path,
     looks: tuple[int, int] = (10, 10),
     baselines: tuple[int, int] = (90, 1000),
     threshold: float = 0.5,
     do_tropo_correction: bool = True,
-    work_dir: Path | None = None,
 ) -> None:
     """Creates a time series from a stack of GSLCs consisting of interferograms and a velocity solution
 
@@ -300,7 +300,7 @@ def time_series(
     granules: Iterable[str],
     bounds: list[float],
     use_gslc_prefix: bool,
-    bucket: str = None,
+    bucket: str | None = None,
     bucket_prefix: str = '',
     work_dir: Path | None = None,
 ) -> None:

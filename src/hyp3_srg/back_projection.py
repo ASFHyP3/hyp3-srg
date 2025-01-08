@@ -25,7 +25,8 @@ def check_required_files(required_files: Iterable, work_dir: Path) -> None:
 def clean_up_after_back_projection(work_dir: Path) -> None:
     patterns = ['*hgt*', 'dem*', 'DEM*', 'q*', '*positionburst*']
     for pattern in patterns:
-        [f.unlink() for f in work_dir.glob(pattern)]
+        for f in work_dir.glob(pattern):
+            f.unlink()
 
 
 def back_project_granules(granule_orbit_pairs: Iterable, work_dir: Path, gpu: bool = False) -> None:
@@ -85,10 +86,10 @@ def create_product(work_dir) -> Path:
 
 def back_project(
     granules: Iterable[str],
-    bounds: list[float] = None,
-    earthdata_username: str = None,
-    earthdata_password: str = None,
-    bucket: str = None,
+    bounds: list[float] | None = None,
+    earthdata_username: str | None = None,
+    earthdata_password: str | None = None,
+    bucket: str | None = None,
     bucket_prefix: str = '',
     use_gslc_prefix: bool = False,
     work_dir: Path | None = None,
@@ -127,6 +128,7 @@ def back_project(
 
     if bounds is None or bounds == [0, 0, 0, 0]:
         bounds = unary_union(bboxs).buffer(0.1).bounds
+        assert bounds is not None  # Return type annotation for unary_union is incorrect
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 

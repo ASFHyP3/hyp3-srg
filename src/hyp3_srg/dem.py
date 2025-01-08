@@ -27,7 +27,7 @@ def ensure_egm_model_available():
                 f.write(chunk)
 
 
-def download_dem_for_srg(bounds: list[float], work_dir: Path | None):
+def download_dem_for_srg(bounds: list[float], work_dir: Path):
     """Download the DEM for the given bounds - [min_lon, min_lat, max_lon, max_lat].
 
     Args:
