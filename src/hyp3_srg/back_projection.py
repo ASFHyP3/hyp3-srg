@@ -71,7 +71,7 @@ def create_product(work_dir) -> Path:
     input_granules = [x.with_suffix('').name for x in work_dir.glob('S1*.SAFE')]
     with open(parameter_file, 'w') as f:
         f.write('Process: back-projection\n')
-        f.write(f"Input Granules: {', '.join(input_granules)}\n")
+        f.write(f'Input Granules: {", ".join(input_granules)}\n')
 
     # We don't compress the data because SLC data is psuedo-random
     with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_STORED) as z:
