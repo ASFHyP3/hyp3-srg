@@ -71,7 +71,7 @@ def create_product(work_dir) -> Path:
     input_granules = [x.with_suffix('').name for x in work_dir.glob('S1*.SAFE')]
     with open(parameter_file, 'w') as f:
         f.write('Process: back-projection\n')
-        f.write(f"Input Granules: {', '.join(input_granules)}\n")
+        f.write(f'Input Granules: {", ".join(input_granules)}\n')
 
     # We don't compress the data because SLC data is psuedo-random
     with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_STORED) as z:
@@ -126,9 +126,10 @@ def back_project(
         bboxs.append(granule_bbox)
         granule_orbit_pairs.append((granule_path, orbit_path))
 
-    if bounds is None or bounds == [0, 0, 0, 0]:
+    if bounds is None:
         bounds = unary_union(bboxs).buffer(0.1).bounds
         assert bounds is not None  # Return type annotation for unary_union is incorrect
+
     dem_path = dem.download_dem_for_srg(bounds, work_dir)
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
 
