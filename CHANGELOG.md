@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3]
+
+### Removed
+* Removed ability to pass [0, 0, 0, 0] as bounds
+
 ## [0.9.2]
 
 ### Added
@@ -46,7 +51,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.6.0]
 
 ### Changed
-* Orbit files are now retrieved using `fetch_for_scene` from `s1_orbits`. 
+* Orbit files are now retrieved using `fetch_for_scene` from `s1_orbits`.
 * ESA Credentials are no longer needed.
 
 ## [0.5.2]
