@@ -6,8 +6,6 @@ dependencies:
   - python>=3.10
   - pip
   # For packaging, and testing
-  - ruff
-  - mypy
   - setuptools
   - setuptools_scm
   - wheel
@@ -18,3 +16,5 @@ dependencies:
   # For running
   - hyp3lib>=3,<4
   - s1_orbits
+  - pip:
+    - -r requirements-static.txt
