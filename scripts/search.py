@@ -63,24 +63,20 @@ def submit_job(granules: list[str], bbox: tuple[float, float, float, float]) -> 
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--site', choices=sites.keys())
-    parser.add_argument('--bbox', type=float, nargs=4)
-    parser.add_argument('--path', type=int)
-    parser.add_argument('--start')
-    parser.add_argument('--end')
+    sub_parsers = parser.add_subparsers(required=True)
+
+    site_parser = sub_parsers.add_parser('site')
+    site_parser.add_argument('site', choices=sites.keys())
+
+    search_parser = sub_parsers.add_parser('search')
+    search_parser.add_argument('bbox', type=float, nargs=4)
+    search_parser.add_argument('path', type=int)
+    search_parser.add_argument('start')
+    search_parser.add_argument('end')
+
     args = parser.parse_args()
-
     if args.site:
-        if any([args.bbox, args.path, args.start, args.end]):
-            raise ValueError('Provide either --site or --bbox, --path, --start, --end')
-        args.bbox = sites[args.site]['bbox']
-        args.path = sites[args.site]['path']
-        args.start = sites[args.site]['start']
-        args.end = sites[args.site]['end']
-
-    if not args.site and not all([args.bbox, args.path, args.start, args.end]):
-        raise ValueError('Must provide all of --bbox, --path, --start, --end if not using --site')
-
+        return argparse.Namespace(**sites[args.site])
     return args
 
 
