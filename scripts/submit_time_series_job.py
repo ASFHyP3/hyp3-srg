@@ -1,5 +1,4 @@
 import argparse
-import warnings
 
 import asf_search
 import hyp3_sdk
