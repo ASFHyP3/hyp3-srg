@@ -15,7 +15,7 @@ def bbox_to_wkt(min_lon: float, min_lat: float, max_lon: float, max_lat: float) 
 def get_granules(
     path: int, start: str, end: str, min_lon: float, min_lat: float, max_lon: float, max_lat: float
 ) -> list[str]:
-    granules = []
+    granules: list[str] = []
     for polarization in (asf_search.POLARIZATION.VV, asf_search.POLARIZATION.VV_VH):
         results = asf_search.geo_search(
             platform=asf_search.PLATFORM.SENTINEL1,
