@@ -1,4 +1,5 @@
 import argparse
+import warnings
 
 import asf_search
 import hyp3_sdk
@@ -11,7 +12,9 @@ def bbox_to_wkt(min_lon: float, min_lat: float, max_lon: float, max_lat: float) 
     return f'POLYGON(({min_lon} {min_lat},{max_lon} {min_lat},{max_lon} {max_lat},{min_lon} {max_lat},{min_lon} {min_lat}))'
 
 
-def get_granules(path: int, start: str, end: str, min_lon: float, min_lat: float, max_lon: float, max_lat: float) -> list[str]:
+def get_granules(
+    path: int, start: str, end: str, min_lon: float, min_lat: float, max_lon: float, max_lat: float
+) -> list[str]:
     granules = []
     for polarization in (asf_search.POLARIZATION.VV, asf_search.POLARIZATION.VV_VH):
         results = asf_search.geo_search(
@@ -35,7 +38,7 @@ def submit_job(granules: list[str], min_lon: float, min_lat: float, max_lon: flo
         'job_parameters': {
             'granules': granules,
             'bounds': [min_lon, min_lat, max_lon, max_lat],
-        }
+        },
     }
     return hyp3.submit_prepared_jobs(prepared_job)[0]
 
@@ -43,20 +46,22 @@ def submit_job(granules: list[str], min_lon: float, min_lat: float, max_lon: flo
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--path', type=int, default=87)
-    parser.add_argument('--min_lon', type=float, default=-155.668003)
-    parser.add_argument('--min_lat', type=float, default=19.06167553)
-    parser.add_argument('--max_lon', type=float, default=-154.905997)
-    parser.add_argument('--max_lat', type=float, default=19.78032447)
-    parser.add_argument('--start', default='2024-01-01T00:00:00Z')
-    parser.add_argument('--end', default='2024-01-31T00:00:00Z')
+    parser.add_argument('path', type=int, help='Path/track number, 1-175')
+    parser.add_argument('min_lon', type=float, help='Western longitude, -180.0 to 180.0')
+    parser.add_argument('min_lat', type=float, help='Southern latitude, -90.0 to 90.0')
+    parser.add_argument('max_lon', type=float, help='Eastern longitude, -180.0 to 180.0')
+    parser.add_argument('max_lat', type=float, help='Northern latitude, -90.0 to 90.0')
+    parser.add_argument('start', help='Start of acquisition window, YYYY-MM-DD')
+    parser.add_argument('end', help='End of acquisition window, YYYY-MM-DD')
 
     return parser.parse_args()
 
 
 def main():
     args = get_args()
-    granule_names = get_granules(args.path, args.start, args.end, args.min_lon, args.min_lat, args.max_lon, args.max_lat)
+    granule_names = get_granules(
+        args.path, args.start, args.end, args.min_lon, args.min_lat, args.max_lon, args.max_lat
+    )
 
     if len(granule_names) == 0:
         raise ValueError('No RAW IW VV or VV+VH granules found for these search criteria')
@@ -72,4 +77,5 @@ def main():
 
 
 if __name__ == '__main__':
+    warnings.filterwarnings('ignore')
     main()
