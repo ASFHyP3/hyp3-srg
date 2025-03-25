@@ -64,7 +64,7 @@ def main():
     )
 
     if len(granule_names) == 0:
-        raise ValueError('No RAW IW VV or VV+VH granules found for these search criteria')
+        raise ValueError('No granules found for these search criteria')
 
     job = submit_job(granule_names, args.min_lon, args.min_lat, args.max_lon, args.max_lat)
 
