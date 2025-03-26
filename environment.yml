@@ -6,8 +6,6 @@ dependencies:
   - python>=3.10
   - pip
   # For packaging, and testing
-  - ruff
-  - mypy
   - setuptools
   - setuptools_scm
   - wheel
@@ -15,6 +13,9 @@ dependencies:
   - pytest-console-scripts
   - pytest-cov
   - asf_search
+  - hyp3_sdk
   # For running
   - hyp3lib>=3,<4
   - s1_orbits
+  - pip:
+    - -r requirements-static.txt

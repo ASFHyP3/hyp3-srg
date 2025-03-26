@@ -13,7 +13,7 @@ def test_download_dem_for_srg(monkeypatch):
         m.setattr(dem, 'ensure_egm_model_available', mock_ensure_egm_model_available)
         mock_call_stanford_module = mock.Mock()
         m.setattr(utils, 'call_stanford_module', mock_call_stanford_module)
-        dem.download_dem_for_srg(box(0, 1, 2, 3).bounds, Path.cwd())
+        dem.download_dem_for_srg(list(box(0, 1, 2, 3).bounds), Path.cwd())
         mock_ensure_egm_model_available.assert_called_once()
         mock_call_stanford_module.assert_called_once_with(
             'DEM/createDEMcop.py',
