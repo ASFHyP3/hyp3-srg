@@ -8,6 +8,9 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.9.5]
 
+### Added
+* `--hyp3-deployment` parameter to `submit_time_series_job.py` script to support submitting jobs to hyp3-lavas-test
+
 ### Changed
 * Default number of looks for time series step from 10x10 to 2x2
 
