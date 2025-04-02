@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.5]
+
+### Added
+* `--hyp3-deployment` parameter to `submit_time_series_job.py` script to support submitting jobs to hyp3-lavas-test
+
+### Changed
+* Default number of looks for time series step from 10x10 to 2x2
+
 ## [0.9.4]
 
 ### Added
