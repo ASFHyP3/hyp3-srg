@@ -1,7 +1,5 @@
 name: Create Release Comment
 
-permissions: {}
-
 on:
   pull_request:
     types:
