@@ -1,5 +1,7 @@
 name: Static analysis
 
+permissions: {}
+
 on: push
 
 jobs:

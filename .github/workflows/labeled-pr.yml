@@ -1,5 +1,7 @@
 name: Is PR labeled?
 
+permissions: {}
+
 on:
   pull_request:
     types:

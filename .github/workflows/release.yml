@@ -1,5 +1,7 @@
 name: Create Release
 
+permissions: {}
+
 on:
   push:
     tags:
