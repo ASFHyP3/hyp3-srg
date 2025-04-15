@@ -37,7 +37,7 @@ jobs:
       version_tag: ${{ needs.call-version-info-workflow.outputs.version_tag }}
       release_branch: main
       develop_branch: develop
-      user: tools-bot
+      user: ${{ github.actor }}
       file: Dockerfile.gpu
     secrets:
       USER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
