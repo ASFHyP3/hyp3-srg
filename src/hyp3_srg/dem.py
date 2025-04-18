@@ -51,6 +51,6 @@ def download_dem_for_srg(bounds: list[float], work_dir: Path):
     ensure_egm_model_available()
 
     stanford_bounds = [bounds[i] for i in [3, 1, 0, 2]]
-    args = [str(dem_path), str(dem_rsc), *stanford_bounds]
+    args = [str(dem_path), str(dem_rsc), *stanford_bounds, '6', '2']
     utils.call_stanford_module('DEM/createDEMcop.py', args, work_dir=work_dir)
     return dem_path
