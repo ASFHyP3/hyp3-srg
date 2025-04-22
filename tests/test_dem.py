@@ -24,6 +24,8 @@ def test_download_dem_for_srg(monkeypatch):
                 1,
                 0,
                 2,
+                '6',
+                '2',
             ],
             work_dir=Path.cwd(),
         )

@@ -182,7 +182,7 @@ def compute_sbas_velocity_solution(
 
 def create_time_series(
     work_dir: Path,
-    looks: tuple[int, int] = (2, 2),
+    looks: tuple[int, int] = (6, 2),
     baselines: tuple[int, int] = (60, 1000),
     threshold: float = 0.5,
     do_tropo_correction: bool = True,
