@@ -11,6 +11,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 * `dem.download_dem_for_srg` now returns a dem with pixels 5m wide and 15m tall, rather than 30m x 30m
 * `time_series.create_time_series` now generates interferograms using 6x2 looks, rather than 2x2
+* Reduced maximum temporal baseline for time series SBAS network to 60 days from 90
 
 ## [0.9.5]
 
@@ -19,7 +20,6 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 * Default number of looks for time series step from 10x10 to 2x2
-* Reduced maximum temporal baseline for time series SBAS network to 60 days from 90 
 
 ## [0.9.4]
 
