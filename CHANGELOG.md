@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.6]
+
+### Changed
+* `dem.download_dem_for_srg` now returns a dem with pixels 5m wide and 15m tall, rather than 30m x 30m
+* `time_series.create_time_series` now generates interferograms using 6x2 looks, rather than 2x2
+* Reduced maximum temporal baseline for time series SBAS network to 60 days from 90
+
 ## [0.9.5]
 
 ### Added

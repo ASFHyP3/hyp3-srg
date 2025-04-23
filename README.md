@@ -39,7 +39,7 @@ docker run -it --rm \
 ```
 
 ### Time-series
-The `time_series` workflow takes a list of up to 50 Sentinel-1 GSLC granule names, along with a bounding box, and produces a time-series. **Note that all of the input GSLSs must have been generated with the provided bounding box.**  Stacks are created with `10` range looks, `10` azimuth looks,  and temporal and spatial baselines of `1000` and `1000`, respectively. Candidate reference points are chosen with a correlation threshold of `0.5` - meaning the correlation must be above `0.5` in all scenes at that point. A tropospheric correction is applied using an elevation-dependent regression.
+The `time_series` workflow takes a list of Sentinel-1 GSLC granule names, along with a bounding box, and produces a time-series. **Note that all of the input GSLSs must have been generated with the provided bounding box.**  Stacks are created with `6` range looks, `2` azimuth looks,  and temporal and spatial baselines of `60` and `1000`, respectively. Candidate reference points are chosen with a correlation threshold of `0.5` - meaning the correlation must be above `0.5` in all scenes at that point. A tropospheric correction is applied using an elevation-dependent regression.
  The following command will run the `time_series` workflow: 
 ```
 docker run -it --rm \
