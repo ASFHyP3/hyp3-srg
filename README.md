@@ -69,8 +69,8 @@ docker run -it \
     --use-gslc-prefix
 ```
 The HyP3 bucket name, job ID, and the bounds used for creation can all be found in the `jobs` response for your pre-existing time-series HyP3 job.
-- Once the container is finishes successfully, get the name of the container using the command `docker ps`
-- Copy the results from the `sbas` directory to a location on your system `docker cp [CONTAINER-NAME]:/home/conda/sbas .`
+- Once the container is finishes successfully, get the name of the container (`docker ps`)
+- Copy the results from the `sbas` directory to a location on your system (`docker cp [CONTAINER-NAME]:/home/conda/sbas .`)
 
 ### Earthdata Login
 
