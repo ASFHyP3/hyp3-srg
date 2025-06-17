@@ -55,13 +55,13 @@ docker run -it --rm \
 To run the time-series step locally and obtain the outputs, follow these steps:
 
 - Pull the docker container (`docker pull --platform linux/amd64 ghcr.io/asfhyp3/hyp3-srg:VERSION`)
-- Run the container locally using a pre-existing set of GSLCs in from a pre-existing time-series HyP3 job:
+- Run the container locally using a pre-existing set of GSLCs from a pre-existing time-series HyP3 job:
 ```bash
 docker run -it \
     -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
     -e EARTHDATA_PASSWORD=[YOUR_PASSWORD_HERE] \
     --platform linux/amd64
-    hyp3-srg:latest \
+    hyp3-srg:[VERSION] \
     ++process time_series \
     --bucket [HYP3-BUCKET-NAME] \
     --bucket-prefix [HYP3-JOB-ID] \
@@ -69,7 +69,7 @@ docker run -it \
     --use-gslc-prefix
 ```
 The HyP3 bucket name, job ID, and the bounds used for creation can all be found in the `jobs` response for your pre-existing time-series HyP3 job.
-- Once the container is finishes successfully, get the name of the container (`docker ps`)
+- Once the container finishes successfully, get the name of the container (`docker ps`)
 - Copy the results from the `sbas` directory to a location on your system (`docker cp [CONTAINER-NAME]:/home/conda/sbas .`)
 
 ### Earthdata Login
