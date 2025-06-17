@@ -9,7 +9,7 @@ HyP3 plugin for Stanford Radar Group (SRG) SAR Processor
 The HyP3-SRG plugin provides a set of workflows (currently only accessible via the docker container) that can be used to process SAR data using the [Stanford Radar Group Processor](https://github.com/asfhyp3/srg). This set of workflow uses the [SRG alogorithms]((https://doi.org/10.1109/LGRS.2017.2753580)) to process Level-0 Sentinel-1 (S1) data to geocoded, user-friendly products that can be used for time-series analysis. The workflows currently included in this plugin are:
 
 - [`back_projection`](#back-projection): A workflow for creating geocoded Sentinel-1 SLCs.
-- [`time_series`](#time-series): A workflow for creating a deformation timeseries of geocoded Sentinel-1 SLCs. 
+- [`time_series`](#time-series): A workflow for creating a deformation timeseries of geocoded Sentinel-1 SLCs.
 
 To run a workflow, you'll first need to build the docker container:
 ```bash
@@ -25,7 +25,7 @@ docker run -it --rm \
     [WORKFLOW_ARGS]
 ```
 
-### Back-projection 
+### Back-projection
 The `back_projection` processing type produces geocoded SLCs using Level-0 Sentinel-1 data as input. The workflow takes a list of Level-0 Sentinel-1 granule names and outputs them as geocoded SLCs (GSLCs).
 An example command for the `back_projection` workflow is:
 ```bash
@@ -40,7 +40,7 @@ docker run -it --rm \
 
 ### Time-series
 The `time_series` workflow takes a list of Sentinel-1 GSLC granule names, along with a bounding box, and produces a time-series. **Note that all of the input GSLSs must have been generated with the provided bounding box.**  Stacks are created with `6` range looks, `2` azimuth looks,  and temporal and spatial baselines of `60` and `1000`, respectively. Candidate reference points are chosen with a correlation threshold of `0.5` - meaning the correlation must be above `0.5` in all scenes at that point. A tropospheric correction is applied using an elevation-dependent regression.
- The following command will run the `time_series` workflow: 
+ The following command will run the `time_series` workflow:
 ```
 docker run -it --rm \
     -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
@@ -51,6 +51,27 @@ docker run -it --rm \
    S1A_IW_RAW__0SDV_20240816T020812_20240816T020844_055232_06BB8A_C7CA \
    S1A_IW_RAW__0SDV_20240804T020812_20240804T020844_055057_06B527_1346
 ```
+#### Running Time-series Locally
+To run the time-series step locally and obtain the outputs, follow these steps:
+
+1. Pull the docker container (`docker pull --platform linux/amd64 ghcr.io/asfhyp3/hyp3-srg:VERSION`)
+1. Run the container locally using a pre-existing set of GSLCs in from a pre-existing time-series HyP3 job:
+```bash
+docker run -it \
+    -e EARTHDATA_USERNAME=[YOUR_USERNAME_HERE] \
+    -e EARTHDATA_PASSWORD=[YOUR_PASSWORD_HERE] \
+    --platform linux/amd64
+    hyp3-srg:latest \
+    ++process time_series \
+    --bucket [HYP3-BUCKET-NAME] \
+    --bucket-prefix [HYP3-JOB-ID] \
+    --bounds [MINLON MINLAT MAXLAT MAXLON] \
+    --use-gslc-prefix
+```
+The HyP3 bucket name, job ID, and the bounds used for creation can all be found in the `jobs` response for your pre-existing time-series HyP3 job.
+1. Once the container is finishes successfully, get the name of the container using the command `docker ps`
+1. Copy the results from the `sbas` directory to a location on your system `docker cp [CONTAINER-NAME]:/home/conda/sbas .`
+
 ### Earthdata Login
 
 For all workflows, the user must provide their Earthdata Login credentials in order to download input data.
@@ -65,8 +86,8 @@ before, check out this [guide](https://harmony.earthdata.nasa.gov/docs#getting-s
 
 ## Developer setup
 ### GPU Setup
-In order for Docker to be able to use the host's GPU, the host must have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) installed and configured. 
-The process is different for different OS's and Linux distros. The setup process for the most common distros, including Ubuntu, 
+In order for Docker to be able to use the host's GPU, the host must have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/index.html) installed and configured.
+The process is different for different OS's and Linux distros. The setup process for the most common distros, including Ubuntu,
 can be found [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuration). Make sure to follow the [Docker configuration steps](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuration) after installing the package.
 
 The AWS ECS-optimized GPU AMI has the configuration described already set up. You can find the latest version of this AMI by calling:
