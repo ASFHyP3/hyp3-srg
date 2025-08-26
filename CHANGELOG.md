@@ -6,10 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.8]
+
+### Changed
+* `dem.download_dem_for_srg` now returns a dem with pixels 6m wide instead of 5m.
+* `time_series.create_time_series` now generates interferograms using 5x2 looks, rather than 6x2
+
+## [0.9.7]
+
+### Changed
+* Updated `dem.ensure_egm_model_available` to use the EGM Model stored in a public `LAVAS` AWS account
+
+## [0.9.6]
+
+### Changed
+* `dem.download_dem_for_srg` now returns a dem with pixels 5m wide and 15m tall, rather than 30m x 30m
+* `time_series.create_time_series` now generates interferograms using 6x2 looks, rather than 2x2
+* Reduced maximum temporal baseline for time series SBAS network to 60 days from 90
+
+## [0.9.5]
+
+### Added
+* `--hyp3-deployment` parameter to `submit_time_series_job.py` script to support submitting jobs to hyp3-lavas-test
+
+### Changed
+* Default number of looks for time series step from 10x10 to 2x2
+
 ## [0.9.4]
 
 ### Added
-* Utility that enables converting outputs to geotiffs.
+* `submit_time_series_job.py` helper script for submitting SRG_TIME_SERIES jobs to https://hyp3-lavas.asf.alaska.edu
 
 ## [0.9.3]
 

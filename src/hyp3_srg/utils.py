@@ -9,7 +9,8 @@ from zipfile import ZipFile
 import asf_search
 from boto3 import client
 from s1_orbits import fetch_for_scene
-from shapely.geometry import Polygon, shape
+from shapely.geometry import shape
+from shapely.geometry.base import BaseGeometry
 
 
 S3 = client('s3')
@@ -115,7 +116,7 @@ def get_earthdata_credentials() -> tuple[str, str]:
     )
 
 
-def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = False) -> tuple[Path, Polygon]:
+def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = False) -> tuple[Path, BaseGeometry]:
     """Download a S1 granule using asf_search. Return its path
     and buffered extent.
 
@@ -153,26 +154,6 @@ def download_raw_granule(granule_name: str, output_dir: Path, unzip: bool = Fals
             zip_path.unlink()
 
     return out_path, bbox
-
-
-def get_bbox(granule_name: str) -> tuple[Path, Polygon]:
-    """Get the buffered extent from asf_search.
-
-    Args:
-        granule_name: Name of the granule to download
-
-    Returns:
-        bbox: the buffered extent polygon
-    """
-    granule_name = granule_name.split('.')[0]
-
-    if not granule_name.endswith('-RAW'):
-        granule_name += '-RAW'
-
-    result = asf_search.granule_search([granule_name])[0]
-    bbox = shape(result.geojson()['geometry'])
-
-    return bbox
 
 
 def download_orbit(granule_name: str, output_dir: Path) -> Path:

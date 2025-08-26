@@ -182,8 +182,8 @@ def compute_sbas_velocity_solution(
 
 def create_time_series(
     work_dir: Path,
-    looks: tuple[int, int] = (10, 10),
-    baselines: tuple[int, int] = (90, 1000),
+    looks: tuple[int, int] = (5, 2),
+    baselines: tuple[int, int] = (60, 1000),
     threshold: float = 0.5,
     do_tropo_correction: bool = True,
 ) -> None:
@@ -237,10 +237,10 @@ def create_time_series_product_name(
     latest_granule = start_dates[-1]
 
     def lat_string(lat):
-        return ('N' if lat >= 0 else 'S') + f'{("%.1f" % abs(lat)).zfill(4)}'.replace('.', '_')
+        return ('N' if lat >= 0 else 'S') + f'{("%.1f" % abs(lat)).zfill(4)}'.replace('.', '_')  # noqa: UP031
 
     def lon_string(lon):
-        return ('E' if lon >= 0 else 'W') + f'{("%.1f" % abs(lon)).zfill(5)}'.replace('.', '_')
+        return ('E' if lon >= 0 else 'W') + f'{("%.1f" % abs(lon)).zfill(5)}'.replace('.', '_')  # noqa: UP031
 
     return '_'.join(
         [

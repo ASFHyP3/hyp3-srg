@@ -13,6 +13,7 @@ dependencies:
   - pytest-console-scripts
   - pytest-cov
   - asf_search
+  - hyp3_sdk
   # For running
   - hyp3lib>=3,<4
   - s1_orbits

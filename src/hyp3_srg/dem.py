@@ -15,7 +15,7 @@ def ensure_egm_model_available():
     """Ensure the EGM module is available.
     Currently using the EGM2004 model provided by Stanford, but hope to switch to a public source.
     """
-    url = 'https://ffwilliams2-shenanigans.s3.us-west-2.amazonaws.com/lavas/egm2008_geoid_grid'
+    url = 'https://lavas-data.s3.us-west-2.amazonaws.com/egm2008_geoid_grid'
 
     proc_home = utils.get_proc_home()
     egm_model_path = proc_home / 'DEM' / 'egm2008_geoid_grid'
@@ -51,6 +51,6 @@ def download_dem_for_srg(bounds: list[float], work_dir: Path):
     ensure_egm_model_available()
 
     stanford_bounds = [bounds[i] for i in [3, 1, 0, 2]]
-    args = [str(dem_path), str(dem_rsc), *stanford_bounds]
+    args = [str(dem_path), str(dem_rsc), *stanford_bounds, '5', '2']
     utils.call_stanford_module('DEM/createDEMcop.py', args, work_dir=work_dir)
     return dem_path
