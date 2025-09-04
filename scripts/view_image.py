@@ -53,30 +53,70 @@ def load_image(file_path: Path, info: dict):
     return ftype, data
 
 
-def plot_image(file_path: Path, rsc_path: Path, file_path2: Path | None = None):
+def plot_image(file_path: Path, rsc_path: Path):
     info = parse_rsc(rsc_path)
     ftype, data = load_image(file_path, info)
     title = file_path.name
 
-    if file_path2 is not None:
-        ftype2, data2 = load_image(file_path2, info)
-        if ftype != ftype2:
-            raise ValueError('Files must be of the same type to plot the difference.')
-        data = data - data2
-        title = f'Difference: {file_path.name} - {file_path2.name}'
-
     cmap = 'gray'
-    if ftype in ['amp', 'slc']:
-        data = 10 * np.log10(data)
     if ftype == 'int':
         cmap = 'hsv'
 
-    f, ax = plt.subplots(1, 1, figsize=(10, 10))
+    f, ax = plt.subplots(1, 1, figsize=(15, 10))
     im = ax.imshow(data, cmap=cmap, vmin=float(np.percentile(data, 1)), vmax=float(np.percentile(data, 99)))
     f.colorbar(im, ax=ax, shrink=0.5)
     ax.set_title(title)
     plt.tight_layout()
     plt.show()
+
+
+def plot_hist(ax, array, color, label):
+    ax.hist(
+        array.flatten(),
+        bins=50,
+        color=color,
+        label=label,
+        alpha=0.25,
+        range=(np.percentile(array, 1), np.percentile(array, 99)),
+    )
+
+
+def plot_diff(file_path: Path, file_path2: Path, rsc_path: Path, save: bool = False):
+    info = parse_rsc(rsc_path)
+    ftype, data = load_image(file_path, info)
+    title = file_path.name
+
+    ftype2, data2 = load_image(file_path2, info)
+    if ftype != ftype2:
+        raise ValueError('Files must be of the same type to plot the difference.')
+    diff = np.abs(data - data2)
+    title = f'{file_path}\n-\n{file_path2}'
+
+    cmap = 'gray'
+    if ftype == 'int':
+        cmap = 'hsv'
+
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 10))
+    im = ax1.imshow(diff, cmap=cmap, vmin=np.percentile(diff, 1), vmax=np.percentile(diff, 99))
+    plot_hist(ax2, diff, 'black', 'Difference')
+    f.colorbar(im, ax=ax1, shrink=0.5)
+    ax1.set_title(title)
+    plt.tight_layout()
+    if not save:
+        plt.show()
+    else:
+        out_path = file_path.parent / f'{file_path.stem}_minus_{file_path2.stem}.png'
+        plt.savefig(out_path, dpi=300)
+        print(f'Saved figure to {out_path}')
+    plt.close(f)
+
+
+def plots():
+    image1 = Path('stanford/raw/S1A_IW_RAW__0SDV_20241006T161640_20241006T161717_055984_06D8A0_FC33.geo')
+    image2s = list(Path('hawaii_old').glob('*.geo'))
+    rsc = Path('stanford/elevation.dem.rsc')
+    for image2 in image2s:
+        plot_diff(image1, image2, rsc, save=True)
 
 
 def main():
@@ -95,7 +135,10 @@ def main():
         nargs='?',
     )
     args = parser.parse_args()
-    plot_image(args.file, args.rsc, args.file2)
+    if args.file2 is None:
+        plot_image(args.file, args.rsc)
+    else:
+        plot_diff(args.file, args.file2, args.rsc)
 
 
 if __name__ == '__main__':
