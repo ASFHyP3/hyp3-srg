@@ -15,7 +15,7 @@ def ensure_egm_model_available():
     """Ensure the EGM module is available.
     Currently using the EGM2004 model provided by Stanford, but hope to switch to a public source.
     """
-    url = 'https://ffwilliams2-shenanigans.s3.us-west-2.amazonaws.com/lavas/egm2008_geoid_grid'
+    url = 'https://lavas-data.s3.us-west-2.amazonaws.com/egm2008_geoid_grid'
 
     proc_home = utils.get_proc_home()
     egm_model_path = proc_home / 'DEM' / 'egm2008_geoid_grid'
