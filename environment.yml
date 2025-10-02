@@ -12,9 +12,9 @@ dependencies:
   - pytest
   - pytest-console-scripts
   - pytest-cov
-  - asf_search
-  - hyp3_sdk
   # For running
+  - asf_search>=10.0.5
+  - hyp3_sdk
   - hyp3lib>=3,<4
   - s1_orbits
   - pip:
