@@ -291,6 +291,14 @@ def package_time_series(granules: list[str], bounds: list[float], work_dir: Path
         'stacktime',
         'velocity',
     ]
+    intermediate = (
+        list(sbas_dir.glob('*.int'))
+        + list(sbas_dir.glob('*.unw'))
+        + list(sbas_dir.glob('*.cc'))
+        + list(sbas_dir.glob('*.amp'))
+    )
+    intermediate = [f.name for f in intermediate]
+    to_keep += intermediate
     [shutil.copy(sbas_dir / f, product_path / f) for f in to_keep]
     shutil.make_archive(str(product_path), 'zip', product_path)
     return zip_path
