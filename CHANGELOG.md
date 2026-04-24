@@ -9,7 +9,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [0.9.9]
 
 ### Changed
-* The `time_series` workflow now includes intermediate products such as the interferograms in the uploaded file.
+* The `time_series` workflow now includes the intermediate interferogram, correlation, and amplitude files in the packaged product.
 
 ## [0.9.8]
 
