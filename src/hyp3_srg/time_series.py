@@ -180,44 +180,6 @@ def compute_sbas_velocity_solution(
     utils.call_stanford_module('sbas/sbas', args=sbas_velocity_args, work_dir=work_dir)
 
 
-def compute_ps_velocity_solution(
-    threshold: float,
-    do_tropo_correction: bool,
-    unw_shape: tuple[int, int],
-    work_dir: Path,
-) -> None:
-    """Computes the ps velocity solution from the unwrapped interferograms
-
-    Args:
-        threshold: correlation threshold for picking reference points
-        do_tropo_correction: whether or not to apply tropospheric correction
-        unw_shape: tuple containing the width and length from the dem.rsc file
-        work_dir: the directory containing the wrapped interferograms
-    """
-    unw_width, unw_length = unw_shape
-
-    copyfile(work_dir / 'intlist', work_dir / 'unwlist')
-    utils.call_stanford_module('sbas/sbas_setup.py', args=['sbas_list', 'geolist'], work_dir=work_dir)
-    copyfile(work_dir / 'intlist', work_dir / 'unwlist')
-    utils.call_stanford_module('util/sed.py', args=['s/int/unw/g', 'unwlist'], work_dir=work_dir)
-
-    ref_point_args = ['unwlist', unw_width, unw_length, threshold]
-    utils.call_stanford_module('int/refpointsfromsim', args=ref_point_args, work_dir=work_dir)
-
-    if do_tropo_correction:
-        tropo_correct_args = ['unwlist', unw_width, unw_length]
-        utils.call_stanford_module('int/tropocorrect.py', args=tropo_correct_args, work_dir=work_dir)
-
-    with open(work_dir / 'unwlist') as unw_list:
-        num_unw_files = len(unw_list.readlines())
-
-    with open(work_dir / 'geolist') as slc_list:
-        num_slcs = len(slc_list.readlines())
-
-    sbas_velocity_args = ['unwlist', num_unw_files, num_slcs, unw_width, 'ref_locs']
-    utils.call_stanford_module('sbas/sbas', args=sbas_velocity_args, work_dir=work_dir)
-
-
 def create_time_series(
     work_dir: Path,
     looks: tuple[int, int] = (6, 2),
@@ -234,6 +196,7 @@ def create_time_series(
         threshold: correlation threshold for picking reference points
         do_tropo_correction: whether or not to apply tropospheric correction
         work_dir: the directory containing the GSLCs to do work in
+        process: Time series processing ps or sbas
     """
     dem_shape = get_size_from_dem('elevation.dem.rsc')
     generate_wrapped_interferograms(looks=looks, baselines=baselines, dem_shape=dem_shape, work_dir=work_dir)
@@ -265,6 +228,7 @@ def create_time_series_product_name(
     Args:
         granule_names: list of the granule names
         bounds: bounding box that was used to generate the GSLCs
+        process: Time series processing ps or sbas
 
     Returns:
         the product name as a string.
@@ -310,6 +274,7 @@ def package_time_series(granules: list[str], bounds: list[float], work_dir: Path
         granules: list of the granule names
         bounds: bounding box that was used to generate the GSLCs
         work_dir: Working directory for completed back-projection run
+        process: Time series processing ps or sbas
 
     Returns:
         Path to the created zip file
@@ -370,6 +335,9 @@ def time_series(
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
+        process: Time series processing ps or sbas
+        pbaseline: Perpendicular baseline limit
+        tbaseline: Temporal baseline limit
     """
     if work_dir is None:
         work_dir = Path.cwd()
