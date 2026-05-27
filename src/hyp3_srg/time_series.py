@@ -267,7 +267,9 @@ def create_time_series_product_name(
     )
 
 
-def package_time_series(granules: list[str], bounds: list[float], work_dir: Path | None = None, process: str = 'sbas') -> Path:
+def package_time_series(
+    granules: list[str], bounds: list[float], work_dir: Path | None = None, process: str = 'sbas'
+) -> Path:
     """Package the time series into a product zip file.
 
     Args:
@@ -324,7 +326,7 @@ def time_series(
     work_dir: Path | None = None,
     process: str = 'sbas',
     pbaseline: int = 1000,
-    tbaseline: int = 60
+    tbaseline: int = 60,
 ) -> None:
     """Create and package a time series stack from a set of Sentinel-1 GSLCs.
 
