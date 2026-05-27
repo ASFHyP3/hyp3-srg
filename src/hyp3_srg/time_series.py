@@ -186,6 +186,7 @@ def create_time_series(
     baselines: tuple[int, int] = (60, 1000),
     threshold: float = 0.5,
     do_tropo_correction: bool = True,
+    process: str = 'sbas',
 ) -> None:
     """Creates a time series from a stack of GSLCs consisting of interferograms and a velocity solution
 
@@ -195,11 +196,18 @@ def create_time_series(
         threshold: correlation threshold for picking reference points
         do_tropo_correction: whether or not to apply tropospheric correction
         work_dir: the directory containing the GSLCs to do work in
+        process: Time series processing ps or sbas
     """
     dem_shape = get_size_from_dem('elevation.dem.rsc')
     generate_wrapped_interferograms(looks=looks, baselines=baselines, dem_shape=dem_shape, work_dir=work_dir)
 
     unw_shape = get_size_from_dem(str(work_dir / 'dem.rsc'))
+    unw_width, unw_length = unw_shape
+
+    if process == 'ps':
+        utils.call_stanford_module('ps/psfilter.py', args=['intlist', 'intlist', unw_width], work_dir=work_dir)
+        [shutil.move(f'{intf}.interp', str(intf)) for intf in list(work_dir.glob('*.int'))]
+
     unwrap_interferograms(dem_shape=dem_shape, unw_shape=unw_shape, work_dir=work_dir)
 
     compute_sbas_velocity_solution(
@@ -213,17 +221,19 @@ def create_time_series(
 def create_time_series_product_name(
     granule_names: list[str],
     bounds: list[float],
+    process: str = 'sbas',
 ):
     """Create a product name for the given granules.
 
     Args:
         granule_names: list of the granule names
         bounds: bounding box that was used to generate the GSLCs
+        process: Time series processing ps or sbas
 
     Returns:
         the product name as a string.
     """
-    prefix = 'S1_SRG_SBAS'
+    prefix = f'S1_SRG_{process.upper()}'
     split_names = [granule.split('_') for granule in granule_names]
 
     absolute_orbit = split_names[0][7]
@@ -257,21 +267,24 @@ def create_time_series_product_name(
     )
 
 
-def package_time_series(granules: list[str], bounds: list[float], work_dir: Path | None = None) -> Path:
+def package_time_series(
+    granules: list[str], bounds: list[float], work_dir: Path | None = None, process: str = 'sbas'
+) -> Path:
     """Package the time series into a product zip file.
 
     Args:
         granules: list of the granule names
         bounds: bounding box that was used to generate the GSLCs
         work_dir: Working directory for completed back-projection run
+        process: Time series processing ps or sbas
 
     Returns:
         Path to the created zip file
     """
     if work_dir is None:
         work_dir = Path.cwd()
-    sbas_dir = work_dir / 'sbas'
-    product_name = create_time_series_product_name(granules, bounds)
+    ps_sbas_dir = work_dir / process
+    product_name = create_time_series_product_name(granules, bounds, process)
     product_path = work_dir / product_name
     product_path.mkdir(exist_ok=True, parents=True)
     zip_path = work_dir / f'{product_name}.zip'
@@ -292,14 +305,14 @@ def package_time_series(granules: list[str], bounds: list[float], work_dir: Path
         'velocity',
     ]
     intermediate_paths = (
-        list(sbas_dir.glob('*.int'))
-        + list(sbas_dir.glob('*.unw'))
-        + list(sbas_dir.glob('*.cc'))
-        + list(sbas_dir.glob('*.amp'))
+        list(ps_sbas_dir.glob('*.int'))
+        + list(ps_sbas_dir.glob('*.unw'))
+        + list(ps_sbas_dir.glob('*.cc'))
+        + list(ps_sbas_dir.glob('*.amp'))
     )
     intermediate = [f.name for f in intermediate_paths]
     to_keep += intermediate
-    [shutil.copy(sbas_dir / f, product_path / f) for f in to_keep]
+    [shutil.copy(ps_sbas_dir / f, product_path / f) for f in to_keep]
     shutil.make_archive(str(product_path), 'zip', product_path)
     return zip_path
 
@@ -311,6 +324,9 @@ def time_series(
     bucket: str | None = None,
     bucket_prefix: str = '',
     work_dir: Path | None = None,
+    process: str = 'sbas',
+    pbaseline: int = 1000,
+    tbaseline: int = 60,
 ) -> None:
     """Create and package a time series stack from a set of Sentinel-1 GSLCs.
 
@@ -321,12 +337,15 @@ def time_series(
         bucket: AWS S3 bucket for uploading the final product(s)
         bucket_prefix: Add a bucket prefix to the product(s)
         work_dir: Working directory for processing
+        process: Time series processing ps or sbas
+        pbaseline: Perpendicular baseline limit
+        tbaseline: Temporal baseline limit
     """
     if work_dir is None:
         work_dir = Path.cwd()
-    sbas_dir = work_dir / 'sbas'
-    if not sbas_dir.exists():
-        mkdir(sbas_dir)
+    ps_sbas_dir = work_dir / process
+    if not ps_sbas_dir.exists():
+        mkdir(ps_sbas_dir)
 
     if not (granules or use_gslc_prefix):
         raise ValueError('use_gslc_prefix must be True if granules not provided')
@@ -344,9 +363,9 @@ def time_series(
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
-    create_time_series(work_dir=sbas_dir)
+    create_time_series(work_dir=ps_sbas_dir, baselines=(tbaseline, pbaseline), process=process)
 
-    zip_path = package_time_series(granule_names, bounds, work_dir)
+    zip_path = package_time_series(granule_names, bounds, work_dir, process)
     if bucket:
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
@@ -379,6 +398,9 @@ def main():
             ' --bucket and --bucket-prefix options'
         ),
     )
+    parser.add_argument('--process', help='SBAS or PS processing')
+    parser.add_argument('--pbaseline', default=1000, type=int, help='Perpendicular baseline')
+    parser.add_argument('--tbaseline', default=60, type=int, help='Temporal baseline')
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
 
