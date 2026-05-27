@@ -180,12 +180,51 @@ def compute_sbas_velocity_solution(
     utils.call_stanford_module('sbas/sbas', args=sbas_velocity_args, work_dir=work_dir)
 
 
+def compute_ps_velocity_solution(
+    threshold: float,
+    do_tropo_correction: bool,
+    unw_shape: tuple[int, int],
+    work_dir: Path,
+) -> None:
+    """Computes the ps velocity solution from the unwrapped interferograms
+
+    Args:
+        threshold: correlation threshold for picking reference points
+        do_tropo_correction: whether or not to apply tropospheric correction
+        unw_shape: tuple containing the width and length from the dem.rsc file
+        work_dir: the directory containing the wrapped interferograms
+    """
+    unw_width, unw_length = unw_shape
+
+    copyfile(work_dir / 'intlist', work_dir / 'unwlist')
+    utils.call_stanford_module('sbas/sbas_setup.py', args=['sbas_list', 'geolist'], work_dir=work_dir)
+    copyfile(work_dir / 'intlist', work_dir / 'unwlist')
+    utils.call_stanford_module('util/sed.py', args=['s/int/unw/g', 'unwlist'], work_dir=work_dir)
+
+    ref_point_args = ['unwlist', unw_width, unw_length, threshold]
+    utils.call_stanford_module('int/refpointsfromsim', args=ref_point_args, work_dir=work_dir)
+
+    if do_tropo_correction:
+        tropo_correct_args = ['unwlist', unw_width, unw_length]
+        utils.call_stanford_module('int/tropocorrect.py', args=tropo_correct_args, work_dir=work_dir)
+
+    with open(work_dir / 'unwlist') as unw_list:
+        num_unw_files = len(unw_list.readlines())
+
+    with open(work_dir / 'geolist') as slc_list:
+        num_slcs = len(slc_list.readlines())
+
+    sbas_velocity_args = ['unwlist', num_unw_files, num_slcs, unw_width, 'ref_locs']
+    utils.call_stanford_module('sbas/sbas', args=sbas_velocity_args, work_dir=work_dir)
+
+
 def create_time_series(
     work_dir: Path,
     looks: tuple[int, int] = (6, 2),
     baselines: tuple[int, int] = (60, 1000),
     threshold: float = 0.5,
     do_tropo_correction: bool = True,
+    process: str = 'sbas',
 ) -> None:
     """Creates a time series from a stack of GSLCs consisting of interferograms and a velocity solution
 
@@ -200,6 +239,12 @@ def create_time_series(
     generate_wrapped_interferograms(looks=looks, baselines=baselines, dem_shape=dem_shape, work_dir=work_dir)
 
     unw_shape = get_size_from_dem(str(work_dir / 'dem.rsc'))
+    unw_width, unw_length = unw_shape
+
+    if process == 'ps':
+        utils.call_stanford_module('ps/psfilter.py', args=['intlist', 'intlist', unw_width], work_dir=work_dir)
+        [shutil.move(f'{intf}.interp', str(intf)) for intf in list(work_dir.glob('*.int'))]
+
     unwrap_interferograms(dem_shape=dem_shape, unw_shape=unw_shape, work_dir=work_dir)
 
     compute_sbas_velocity_solution(
@@ -213,6 +258,7 @@ def create_time_series(
 def create_time_series_product_name(
     granule_names: list[str],
     bounds: list[float],
+    process: str = 'sbas',
 ):
     """Create a product name for the given granules.
 
@@ -223,7 +269,7 @@ def create_time_series_product_name(
     Returns:
         the product name as a string.
     """
-    prefix = 'S1_SRG_SBAS'
+    prefix = f'S1_SRG_{process.upper()}'
     split_names = [granule.split('_') for granule in granule_names]
 
     absolute_orbit = split_names[0][7]
@@ -257,7 +303,7 @@ def create_time_series_product_name(
     )
 
 
-def package_time_series(granules: list[str], bounds: list[float], work_dir: Path | None = None) -> Path:
+def package_time_series(granules: list[str], bounds: list[float], work_dir: Path | None = None, process: str = 'sbas') -> Path:
     """Package the time series into a product zip file.
 
     Args:
@@ -270,8 +316,8 @@ def package_time_series(granules: list[str], bounds: list[float], work_dir: Path
     """
     if work_dir is None:
         work_dir = Path.cwd()
-    sbas_dir = work_dir / 'sbas'
-    product_name = create_time_series_product_name(granules, bounds)
+    ps_sbas_dir = work_dir / process
+    product_name = create_time_series_product_name(granules, bounds, process)
     product_path = work_dir / product_name
     product_path.mkdir(exist_ok=True, parents=True)
     zip_path = work_dir / f'{product_name}.zip'
@@ -292,14 +338,14 @@ def package_time_series(granules: list[str], bounds: list[float], work_dir: Path
         'velocity',
     ]
     intermediate_paths = (
-        list(sbas_dir.glob('*.int'))
-        + list(sbas_dir.glob('*.unw'))
-        + list(sbas_dir.glob('*.cc'))
-        + list(sbas_dir.glob('*.amp'))
+        list(ps_sbas_dir.glob('*.int'))
+        + list(ps_sbas_dir.glob('*.unw'))
+        + list(ps_sbas_dir.glob('*.cc'))
+        + list(ps_sbas_dir.glob('*.amp'))
     )
     intermediate = [f.name for f in intermediate_paths]
     to_keep += intermediate
-    [shutil.copy(sbas_dir / f, product_path / f) for f in to_keep]
+    [shutil.copy(ps_sbas_dir / f, product_path / f) for f in to_keep]
     shutil.make_archive(str(product_path), 'zip', product_path)
     return zip_path
 
@@ -311,6 +357,9 @@ def time_series(
     bucket: str | None = None,
     bucket_prefix: str = '',
     work_dir: Path | None = None,
+    process: str = 'sbas',
+    pbaseline: int = 1000,
+    tbaseline: int = 60
 ) -> None:
     """Create and package a time series stack from a set of Sentinel-1 GSLCs.
 
@@ -324,9 +373,9 @@ def time_series(
     """
     if work_dir is None:
         work_dir = Path.cwd()
-    sbas_dir = work_dir / 'sbas'
-    if not sbas_dir.exists():
-        mkdir(sbas_dir)
+    ps_sbas_dir = work_dir / process
+    if not ps_sbas_dir.exists():
+        mkdir(ps_sbas_dir)
 
     if not (granules or use_gslc_prefix):
         raise ValueError('use_gslc_prefix must be True if granules not provided')
@@ -344,9 +393,9 @@ def time_series(
     utils.create_param_file(dem_path, dem_path.with_suffix('.dem.rsc'), work_dir)
     utils.call_stanford_module('util/merge_slcs.py', work_dir=work_dir)
 
-    create_time_series(work_dir=sbas_dir)
+    create_time_series(work_dir=ps_sbas_dir, baselines=(tbaseline, pbaseline), process=process)
 
-    zip_path = package_time_series(granule_names, bounds, work_dir)
+    zip_path = package_time_series(granule_names, bounds, work_dir, process)
     if bucket:
         upload_file_to_s3(zip_path, bucket, bucket_prefix)
 
@@ -379,6 +428,9 @@ def main():
             ' --bucket and --bucket-prefix options'
         ),
     )
+    parser.add_argument('--process', help='SBAS or PS processing')
+    parser.add_argument('--pbaseline', default=1000, type=int, help='Perpendicular baseline')
+    parser.add_argument('--tbaseline', default=60, type=int, help='Temporal baseline')
     parser.add_argument('granules', type=str.split, nargs='*', default='', help='GSLC granules.')
     args = parser.parse_args()
 
