@@ -13,7 +13,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * Added `--tbaseline` and `--pbaseline` parameters to specify temporal and perpendicular baselines respectively.
 
 ### Changed
-* Pinned both Dockerfiles to SRG v0.4.2.
+* Pinned both Dockerfiles to SRG v0.4.3.
 
 ## [0.9.9]
 
