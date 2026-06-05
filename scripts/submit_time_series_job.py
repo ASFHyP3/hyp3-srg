@@ -69,6 +69,10 @@ def submit_job(
     }
     if name is not None:
         prepared_job['name'] = name
+    if bucket is not None:
+        prepared_job['bucket'] =  bucket
+        if bucket_prefix is not None:
+            prepared_job['bucket_prefix'] = bucket_prefix
     return hyp3.submit_prepared_jobs(prepared_job)[0]
 
 
