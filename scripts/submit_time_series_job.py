@@ -70,7 +70,7 @@ def submit_job(
     if name is not None:
         prepared_job['name'] = name
     if bucket is not None:
-        prepared_job['bucket'] =  bucket
+        prepared_job['bucket'] = bucket
         if bucket_prefix is not None:
             prepared_job['bucket_prefix'] = bucket_prefix
     return hyp3.submit_prepared_jobs(prepared_job)[0]
@@ -109,8 +109,11 @@ def get_args():
     # Optional arguments
     parser.add_argument('--name', help='Name for the job')
     parser.add_argument('--bucket', help='Bucket Name')
-    parser.add_argument('--bucket-prefix', help='Bucket prefix')
-    parser.add_argument('--process', default='sbas', help='Processing strategy (sbas or ps)')
+    parser.add_argument(
+        '--bucket-prefix',
+        help="Bucket prefix job products will be written to. The argument will be ignored if `--bucket` isn't provided. This argument also allows expansion of job name or job id by using `{name}` and `{job_id}` if contained within the string.",
+    )
+    parser.add_argument('--process', choices=['sbas', 'ps'], default='sbas', help='Processing strategy (sbas or ps)')
     parser.add_argument('--tbaseline', default=1000, help='Temporal baseline')
     parser.add_argument('--pbaseline', default=60, help='Perpendicular baseline')
     parser.add_argument(
