@@ -82,10 +82,10 @@ def get_args():
         epilog="""
   Examples:
   # Using bounding box:
-  python submit_time_series_job.py 50 2023-01-01 2023-02-01 --bbox -120.0 35.0 -119.0 36.0 --name "KernCounty-Asc050"
+  python submit_time_series_job.py 64 2023-01-01 2023-02-01 --bbox -120.0 35.0 -119.0 36.0 --name "KernCounty-Asc050"
   
   # Using WKT polygon:
-  python submit_time_series_job.py 50 2023-01-01 2023-02-01 --wkt "POLYGON((-120.0 35.0, -119.0 35.0, -119.0 36.0, -120.0 36.0, -120.0 35.0))"
+  python submit_time_series_job.py 64 2023-01-01 2023-02-01 --wkt "POLYGON((-120.0 35.0, -119.0 35.0, -119.0 36.0, -120.0 36.0, -120.0 35.0))"
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
