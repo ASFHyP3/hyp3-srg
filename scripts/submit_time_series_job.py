@@ -57,30 +57,16 @@ def submit_job(
     bucket_prefix: str | None = None,
 ) -> hyp3_sdk.Job:
     hyp3 = hyp3_sdk.HyP3(hyp3_url)
-    if bucket is None:
-        prepared_job = {
-            'job_type': 'SRG_TIME_SERIES',
-            'job_parameters': {
-                'granules': granules,
-                'bounds': [min_lon, min_lat, max_lon, max_lat],
-                'process': process,
-                'tbaseline': tbaseline,
-                'pbaseline': pbaseline,
-            },
-        }
-    else:
-        prepared_job = {
-            'job_type': 'SRG_TIME_SERIES',
-            'job_parameters': {
-                'granules': granules,
-                'bounds': [min_lon, min_lat, max_lon, max_lat],
-                'process': process,
-                'tbaseline': tbaseline,
-                'pbaseline': pbaseline,
-                'bucket': bucket,
-                'bucket_prefix': bucket_prefix,
-            },
-        }
+    prepared_job = {
+        'job_type': 'SRG_TIME_SERIES',
+        'job_parameters': {
+            'granules': granules,
+            'bounds': [min_lon, min_lat, max_lon, max_lat],
+            'process': process,
+            'tbaseline': tbaseline,
+            'pbaseline': pbaseline,
+        },
+    }
     if name is not None:
         prepared_job['name'] = name
     return hyp3.submit_prepared_jobs(prepared_job)[0]
