@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1]
+
+### Added
+* Added new parameters from v0.10.0 to `submit_time_series_job` script.
+* Added `--wkt` parameter to find bounds from a WKT Polygon.
+* Added `--bbox` parameter to pass regular bounding box instead of WKT Polygon.
+* Added `--name` parameter to customize the job name.
+
 ## [0.10.0]
 
 ### Added
