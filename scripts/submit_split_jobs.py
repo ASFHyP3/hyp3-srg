@@ -62,6 +62,7 @@ def submit_ts(
     bucket_prefixes: list[str],
 ) -> hyp3_sdk.Job:
     hyp3 = hyp3_sdk.HyP3(hyp3_url)
+    batches = int(len(names) / 100) + 1
     sub_jobs = []
     for batch in range(batches):
         ini = batch * 100
@@ -82,8 +83,8 @@ def submit_ts(
             }
             if names[i] is not None:
                 prepared_job['name'] = names[i]
-            if buckets[i] is not None:
-                prepared_job['bucket'] = buckets[i]
+            if bucket is not None:
+                prepared_job['bucket'] = bucket
                 if bucket_prefixes[i] is not None:
                     prepared_job['bucket_prefix'] = bucket_prefixes[i]
             jobs.append(prepared_job)
@@ -132,13 +133,14 @@ def main():
     args = get_args()
 
     jobs_file = open(args.file)
-    jobs = [job for job in jobs_file.readlines() if not '#' in job]
+    jobs = [job for job in jobs_file.readlines() if not in '#' job]
     jobs_file.close()
 
     hyp3_url = f'https://{args.hyp3_deployment}.asf.alaska.edu'
     bucket = 'lavas-data'
 
     names, tbaselines, pbaselines, processes, bucket_prefixes = [], [], [], [], []
+    min_lons, min_lats, max_lons, max_lats = [], [], [], []
 
     jobs_gslcs = []
     for job in jobs:
@@ -147,13 +149,13 @@ def main():
         if 'POLYGON' in aoi:
             min_lon, min_lat, max_lon, max_lat = wkt_to_bbox(aoi)
         else:
-            min_lon, min_lat, max_lon, max_lat = *[float(coord) for coord in aoi.split()]
+            min_lon, min_lat, max_lon, max_lat = (float(coord) for coord in aoi.split())
         granules = get_granules(
             path, start, end, min_lon, min_lat, max_lon, max_lat
         )
 
         if args.just_gslc or not args.just_ts:
-            bucket_prefix = f'{name}/GSLC_granules'
+            bucket_prefix = f'{name}_{path}/GSLC_granules'
 
             jobs_gslcs += submit_gslcs(
                         granules,
@@ -162,11 +164,11 @@ def main():
                         max_lon,
                         max_lat,
                         hyp3_url,
-                        name,
+                        f'{name}_{path}',
                         bucket,
                         bucket_prefix,
                         )
-        names.append(name)
+        names.append(f'{name}_{path}')
         min_lons.append(min_lon)
         min_lats.append(min_lat)
         max_lons.append(max_lon)
@@ -174,7 +176,7 @@ def main():
         tbaselines.append(tbaseline)
         pbaselines.append(pbaseline)
         processes.append(process)
-        bucket_prefixes.append(f'{name}/{process}')
+        bucket_prefixes.append(f'{name}_{path}/{process}')
 
     if not args.just_gslc and not args.just_ts:
         print('Please wait for the gslc jobs')
