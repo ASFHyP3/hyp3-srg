@@ -265,9 +265,9 @@ def plot_displacement(process_dir: Path) -> None:
     icolor = numpy.zeros(image.shape, dtype=numpy.int32)
 
     # scale for amplitude
-    ampsum = sum(sum(mag))
+    ampsum = sum(mag)
     ampi = nlines * unwwidth
-    ampi = numpy.count_nonzero(mag)
+    ampi = int(numpy.count_nonzero(mag))
     scalemag = (scale * 150 / (ampsum / ampi)) / 256
     print('scale factor ', scalemag)
     # potential overflows in amplitude

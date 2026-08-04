@@ -20,8 +20,6 @@ def submit_gslcs(
     hyp3 = hyp3_sdk.HyP3(hyp3_url)
     batches = int(len(granules) / 100) + 1
     sub_jobs = []
-    if name is None and (bucket is None or bucket_prefix is None):
-        raise ValueError('You need to provide a name or a bucket and bucket prefix')
     for batch in range(batches):
         ini = batch * 100
         if batch == batches - 1:
@@ -148,8 +146,8 @@ def main():
 
     jobs_gslcs = []
     for job in jobs:
-        path, start, end, process, tbaseline, pbaseline, aoi, name = job.split(';')
-        path = int(path)
+        spath, start, end, process, tbaseline, pbaseline, aoi, name = job.split(';')
+        path = int(spath)
         if 'POLYGON' in aoi:
             min_lon, min_lat, max_lon, max_lat = wkt_to_bbox(aoi)
         else:
