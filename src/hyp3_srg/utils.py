@@ -7,6 +7,8 @@ from platform import system
 from zipfile import ZipFile
 
 import asf_search
+import matplotlib.pyplot as plt
+import numpy
 from boto3 import client
 from s1_orbits import fetch_for_scene
 from shapely.geometry import shape
@@ -209,6 +211,83 @@ def how_many_gpus():
     (param, err) = proc.communicate()
     ngpus = int(str(param, 'UTF-8').split()[0])
     return ngpus
+
+
+def plot_displacement(process_dir: Path) -> None:
+    """Create a png image for the displacement product.
+
+    Args:
+        process_dir: Folder with the displacement product
+    """
+    infile = process_dir / 'displacement'
+    # define our color tables
+    upramp = numpy.linspace(100, 255, 120) / 255
+    dnramp = numpy.linspace(255, 100, 120) / 255
+    oneramp = numpy.ones(120)
+    r = numpy.zeros(360)
+    g = numpy.zeros(360)
+    b = numpy.zeros(360)
+    r[0:120] = upramp
+    r[120:240] = oneramp
+    r[240:360] = dnramp
+    g[0:120] = dnramp
+    g[120:240] = upramp
+    g[240:360] = oneramp
+    b[0:120] = oneramp
+    b[120:240] = dnramp
+    b[240:360] = upramp
+    contour = 100.0
+    # get params from rsc file
+    fe = open(process_dir / 'dem.rsc')
+    words = fe.readline()
+    unwwidth = int(words.split()[1])
+    words = fe.readline()
+    unwlength = int(words.split()[1])
+    fe.close()
+
+    nsteps = int(os.path.getsize(infile) / unwwidth / 8 / unwlength)
+    nlines = int(os.path.getsize(infile) / unwwidth / 8 / nsteps)
+    scale = 1
+    exponent = 0.3
+
+    # initialize a zero filled array for display
+    rgb = numpy.zeros((nlines, unwwidth, 3))
+
+    # load data
+    indata = numpy.fromfile(infile, dtype=numpy.single)
+    if int(indata.shape[0] / unwwidth / 2) != 0:
+        image = indata[(nsteps * nlines - nlines) * unwwidth * 2 : (nsteps * nlines) * unwwidth * 2]
+        image = numpy.reshape(image, (-1, unwwidth * 2))
+    # convert to mag/hgt
+    mag = numpy.power(numpy.absolute(image[:, 0:unwwidth]), exponent)
+    hgt = numpy.mod(image[:, unwwidth : 2 * unwwidth], contour)
+    # create an integer array for mapping into rgb
+    icolor = numpy.zeros(image.shape, dtype=numpy.int32)
+
+    # scale for amplitude
+    ampsum = sum(sum(mag))
+    ampi = nlines * unwwidth
+    ampi = numpy.count_nonzero(mag)
+    scalemag = (scale * 150 / (ampsum / ampi)) / 256
+    print('scale factor ', scalemag)
+    # potential overflows in amplitude
+    mag = numpy.clip(mag * scalemag, 0, 1)
+
+    # hgt in contour units
+    numpy.rint(hgt / contour * 360, out=hgt)
+    ihgt = hgt.astype(int)
+    icolor = ihgt.clip(max=359)
+
+    plt.figure(1, figsize=(10, 10))
+    # cid = fig.canvas.mpl_connect('button_press_event', mouse_event_mht)
+
+    # load color table values for image
+    rgb[:, :, 0] = r[icolor[:, :]] * mag
+    rgb[:, :, 1] = g[icolor[:, :]] * mag
+    rgb[:, :, 2] = b[icolor[:, :]] * mag
+
+    plt.imshow(rgb)
+    plt.savefig(process_dir / 'displacement.png')
 
 
 def get_s3_args(uri: str, dest_dir: Path | None = None) -> tuple[str, str, Path]:

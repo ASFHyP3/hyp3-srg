@@ -1,8 +1,8 @@
 import argparse
 
-import asf_search
+import boto3
+import botocore
 import hyp3_sdk
-
 from submit_time_series_job import get_granules, wkt_to_bbox
 
 
@@ -21,7 +21,7 @@ def submit_gslcs(
     batches = int(len(granules) / 100) + 1
     sub_jobs = []
     if name is None and (bucket is None or bucket_prefix is None):
-         raise ValueError('You need to provide a name or a bucket and bucket prefix')
+        raise ValueError('You need to provide a name or a bucket and bucket prefix')
     for batch in range(batches):
         ini = batch * 100
         if batch == batches - 1:
@@ -44,7 +44,9 @@ def submit_gslcs(
                 if bucket_prefix is not None:
                     prepared_job['bucket_prefix'] = bucket_prefix
             jobs.append(prepared_job)
-        sub_jobs += hyp3.submit_prepared_jobs(jobs)
+        if len(jobs) > 0:
+            sub_jobs += hyp3.submit_prepared_jobs(jobs)
+    print(f'{len(sub_jobs)} jobs have been submitted for {name}')
     return sub_jobs
 
 
@@ -58,6 +60,7 @@ def submit_ts(
     tbaselines: list[int],
     pbaselines: list[int],
     names: list[str],
+    ignore: list[str],
     bucket: str,
     bucket_prefixes: list[str],
 ) -> hyp3_sdk.Job:
@@ -72,6 +75,8 @@ def submit_ts(
             fin = (batch + 1) * 100
         jobs = []
         for i in range(ini, fin):
+            if names[i] in ignore:
+                continue
             prepared_job = {
                 'job_type': 'SRG_TS',
                 'job_parameters': {
@@ -89,6 +94,7 @@ def submit_ts(
                     prepared_job['bucket_prefix'] = bucket_prefixes[i]
             jobs.append(prepared_job)
         sub_jobs += hyp3.submit_prepared_jobs(jobs)
+    print(f'{len(sub_jobs)} jobs have been submitted')
     return sub_jobs
 
 
@@ -104,20 +110,16 @@ def get_args():
     )
 
     # Required positional arguments
-    parser.add_argument('file', type=int, help='File with the job specifications')
+    parser.add_argument('--file', type=str, help='File with the job specifications')
     parser.add_argument(
         '--just-gslc',
         action='store_true',
-        help=(
-            'If true the products will be send to the lavas-data bucket'
-        ),
+        help=('If true the products will be send to the lavas-data bucket'),
     )
     parser.add_argument(
         '--just-ts',
         action='store_true',
-        help=(
-            'If true the products will be send to the lavas-data bucket'
-        ),
+        help=('If true the products will be send to the lavas-data bucket'),
     )
     parser.add_argument(
         '--hyp3-deployment',
@@ -133,11 +135,13 @@ def main():
     args = get_args()
 
     jobs_file = open(args.file)
-    jobs = [job for job in jobs_file.readlines() if not in '#' job]
+    jobs = [job.replace('\n', '') for job in jobs_file.readlines() if '#' not in job]
     jobs_file.close()
 
+    print(jobs, args.just_gslc)
     hyp3_url = f'https://{args.hyp3_deployment}.asf.alaska.edu'
     bucket = 'lavas-data'
+    hyp3 = hyp3_sdk.HyP3(hyp3_url)
 
     names, tbaselines, pbaselines, processes, bucket_prefixes = [], [], [], [], []
     min_lons, min_lats, max_lons, max_lats = [], [], [], []
@@ -150,50 +154,70 @@ def main():
             min_lon, min_lat, max_lon, max_lat = wkt_to_bbox(aoi)
         else:
             min_lon, min_lat, max_lon, max_lat = (float(coord) for coord in aoi.split())
-        granules = get_granules(
-            path, start, end, min_lon, min_lat, max_lon, max_lat
-        )
+        granules = get_granules(path, start, end, min_lon, min_lat, max_lon, max_lat)
 
         if args.just_gslc or not args.just_ts:
             bucket_prefix = f'{name}_{path}/GSLC_granules'
 
             jobs_gslcs += submit_gslcs(
-                        granules,
-                        min_lon,
-                        min_lat,
-                        max_lon,
-                        max_lat,
-                        hyp3_url,
-                        f'{name}_{path}',
-                        bucket,
-                        bucket_prefix,
-                        )
+                granules,
+                min_lon,
+                min_lat,
+                max_lon,
+                max_lat,
+                hyp3_url,
+                f'{name}_{path}',
+                bucket,
+                bucket_prefix,
+            )
         names.append(f'{name}_{path}')
         min_lons.append(min_lon)
         min_lats.append(min_lat)
         max_lons.append(max_lon)
         max_lats.append(max_lat)
-        tbaselines.append(tbaseline)
-        pbaselines.append(pbaseline)
+        tbaselines.append(int(tbaseline))
+        pbaselines.append(int(pbaseline))
         processes.append(process)
-        bucket_prefixes.append(f'{name}_{path}/{process}')
+        bucket_prefixes.append(f'{name}_{path}')
 
     if not args.just_gslc and not args.just_ts:
         print('Please wait for the gslc jobs')
-        jobs_gslcs.watch()
+        hyp3.watch(hyp3_sdk.jobs.Batch(jobs_gslcs))
 
     if args.just_ts or not args.just_gslc:
+        ignore = []
+        for name in names:
+            pending_jobs = hyp3.find_jobs(job_type='SRG_GSLC', name=name, status_code='PENDING').jobs
+            pending_jobs += hyp3.find_jobs(job_type='SRG_GSLC', name=name, status_code='RUNNING').jobs
+            cont = 'y'
+            s3 = boto3.resource('s3', config=boto3.session.Config(signature_version=botocore.UNSIGNED))
+            buck = s3.Bucket('lavas-data')
+            objs = buck.objects.filter(Prefix=f'{name}/GSLC_granules')
+            if len(list(objs)) == 0:
+                print(f'No GSLCs found for {name}')
+                cont = 'n'
+            if len(pending_jobs) > 0:
+                cont = input(f'There are currently {len(pending_jobs)} for {name} do you wish to process it (y/n):')
+            if not cont[0].lower() == 'y':
+                ignore.append(name)
         jobs_ts = submit_ts(
-                min_lons,
-                min_lats,
-                max_lons,
-                max_lats,
-                hyp3_url,
-                processes,
-                tbaselines,
-                pbaselines,
-                names,
-                bucket,
-                bucket_prefixes,
-                )
-        jobs_ts.watch()
+            min_lons,
+            min_lats,
+            max_lons,
+            max_lats,
+            hyp3_url,
+            processes,
+            tbaselines,
+            pbaselines,
+            names,
+            ignore,
+            bucket,
+            bucket_prefixes,
+        )
+        cont = input('Want to wait until the jobs are done (y/n):')
+        if cont[0].lower() == 'y':
+            hyp3.watch(hyp3_sdk.jobs.Batch(jobs_ts))
+
+
+if __name__ == '__main__':
+    main()
