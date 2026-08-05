@@ -288,6 +288,7 @@ def package_time_series(
     product_path = work_dir / product_name
     product_path.mkdir(exist_ok=True, parents=True)
     zip_path = work_dir / f'{product_name}.zip'
+    utils.plot_displacement(ps_sbas_dir)
 
     to_keep = [
         # Metadata
@@ -303,6 +304,8 @@ def package_time_series(
         'stackmht',
         'stacktime',
         'velocity',
+        # png
+        'displacement.png',
     ]
     intermediate_paths = (
         list(ps_sbas_dir.glob('*.int'))

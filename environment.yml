@@ -16,6 +16,7 @@ dependencies:
   - asf_search>=10.0.5
   - hyp3_sdk
   - hyp3lib>=3,<4
+  - matplotlib
   - s1_orbits
   - pip:
     - -r requirements-static.txt
