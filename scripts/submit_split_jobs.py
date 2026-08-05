@@ -112,12 +112,12 @@ def get_args():
     parser.add_argument(
         '--just-gslc',
         action='store_true',
-        help=('If true the products will be send to the lavas-data bucket'),
+        help=('If true only the GSLC jobs will be submitted'),
     )
     parser.add_argument(
         '--just-ts',
         action='store_true',
-        help=('If true the products will be send to the lavas-data bucket'),
+        help=('If true only the TS job will be submitted'),
     )
     parser.add_argument(
         '--hyp3-deployment',
