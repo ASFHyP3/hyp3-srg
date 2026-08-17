@@ -101,8 +101,11 @@ def get_args():
         description='Submit time series job to HyP3',
         epilog="""
   Examples:
-  # Using bounding box:
-  python submit_split_ts_job.py --file jobs.csv --publish
+  python submit_split_jobs.py --file jobs.csv --hyp3-deployment hyp3-lavas
+  # Just running GSLC jobs
+  python submit_split_jobs.py --file jobs.csv --hyp3-deployment hyp3-lavas --just-gslc
+  # Just running time series jobs
+  python submit_split_jobs.py --file jobs.csv --hyp3-deployment hyp3-lavas --just-ts
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -136,7 +139,6 @@ def main():
     jobs = [job.replace('\n', '') for job in jobs_file.readlines() if '#' not in job]
     jobs_file.close()
 
-    print(jobs, args.just_gslc)
     hyp3_url = f'https://{args.hyp3_deployment}.asf.alaska.edu'
     bucket = 'lavas-data'
     hyp3 = hyp3_sdk.HyP3(hyp3_url)
@@ -212,7 +214,7 @@ def main():
             bucket,
             bucket_prefixes,
         )
-        cont = input('Want to wait until the jobs are done (y/n):')
+        cont = input('Want to wait until the time series jobs are done (y/n):')
         if cont[0].lower() == 'y':
             hyp3.watch(hyp3_sdk.jobs.Batch(jobs_ts))
 
