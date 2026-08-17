@@ -101,6 +101,7 @@ def get_args():
         description='Submit time series job to HyP3',
         epilog="""
   Examples:
+  # Run GSLC jobs and then time series job
   python submit_split_jobs.py --file jobs.csv --hyp3-deployment hyp3-lavas
   # Just running GSLC jobs
   python submit_split_jobs.py --file jobs.csv --hyp3-deployment hyp3-lavas --just-gslc
@@ -214,7 +215,7 @@ def main():
             bucket,
             bucket_prefixes,
         )
-        cont = input('Want to wait until the time series jobs are done (y/n):')
+        cont = input('Do you want to wait until the time series jobs are done (y/n):')
         if cont[0].lower() == 'y':
             hyp3.watch(hyp3_sdk.jobs.Batch(jobs_ts))
 
