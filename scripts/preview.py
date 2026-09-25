@@ -286,9 +286,15 @@ def run(inps):
     namp = normalize_amp(amp)
 
     N = 20  # plot every 20 pts for faster plotting
-    ref_rc   = np.loadtxt(f'{inps.file_dir}/ref_locs', dtype=int)
-    ref_lons = rsc['X_FIRST'] + ref_rc[::N, 0] * rsc['X_STEP']
-    ref_lats = rsc['Y_FIRST'] + ref_rc[::N, 1] * rsc['Y_STEP']
+    ref_locs_path = f'{inps.file_dir}/ref_locs'
+    if os.path.exists(ref_locs_path) and os.path.getsize(ref_locs_path) > 0:
+        ref_rc   = np.loadtxt(ref_locs_path, dtype=int).reshape(-1, 2)
+        ref_lons = rsc['X_FIRST'] + ref_rc[::N, 0] * rsc['X_STEP']
+        ref_lats = rsc['Y_FIRST'] + ref_rc[::N, 1] * rsc['Y_STEP']
+    else:
+        print(f'  warning: {ref_locs_path} is missing or empty, skipping ref_locs overlay')
+        ref_rc = np.empty((0, 2), dtype=int)
+        ref_lons = ref_lats = np.array([])
 
     cc_files = sorted(glob.glob(f'{inps.file_dir}/*.cc'))
     print(f'averaging coherence over {len(cc_files)} pairs...')
@@ -317,7 +323,8 @@ def run(inps):
     fig, ax = plt.subplots()
     ax.set_title('Mean amplitude')
     image_show(namp, ax, extent, cmap='gray', clabel='normalized (-)', anntext=f'{len(ref_rc)} ref_locs, every {N}$^{{th}}$ shown')
-    ax.scatter(ref_lons, ref_lats, s=0.3, c='orange')
+    if len(ref_rc) > 0:
+        ax.scatter(ref_lons, ref_lats, s=0.3, c='orange')
     savefig(fig, 'avgAmplitude.png')
 
     fig, ax = plt.subplots()
