@@ -144,7 +144,9 @@ def unwrap_interferograms(dem_shape: tuple[int, int], unw_shape: tuple[int, int]
 
 
 def compute_sbas_velocity_solution(
-    threshold: float,
+    #threshold: float,
+    ps_threshold: float,
+    similarity_threshold: float,
     do_tropo_correction: bool,
     unw_shape: tuple[int, int],
     work_dir: Path,
@@ -163,8 +165,8 @@ def compute_sbas_velocity_solution(
     copyfile(work_dir / 'intlist', work_dir / 'unwlist')
     utils.call_stanford_module('util/sed.py', args=['s/int/unw/g', 'unwlist'], work_dir=work_dir)
 
-    ref_point_args = ['unwlist', unw_width, unw_length, threshold]
-    utils.call_stanford_module('int/findrefpoints', args=ref_point_args, work_dir=work_dir)
+    ref_point_args = ['intlist', unw_width, ps_threshold, similarity_threshold]
+    utils.call_stanford_module('ps/refpointsfromsim.py', args=ref_point_args)
 
     if do_tropo_correction:
         tropo_correct_args = ['unwlist', unw_width, unw_length]
@@ -184,7 +186,9 @@ def create_time_series(
     work_dir: Path,
     looks: tuple[int, int] = (6, 2),
     baselines: tuple[int, int] = (60, 1000),
-    threshold: float = 0.5,
+    ps_threshold: float = 2,
+    similarity_threshold: float = 0.4,
+    #threshold: float = 0.5,
     do_tropo_correction: bool = True,
     process: str = 'sbas',
 ) -> None:
@@ -211,7 +215,8 @@ def create_time_series(
     unwrap_interferograms(dem_shape=dem_shape, unw_shape=unw_shape, work_dir=work_dir)
 
     compute_sbas_velocity_solution(
-        threshold=threshold,
+        ps_threshold=ps_threshold,
+        similarity_threshold=similarity_threshold,
         do_tropo_correction=do_tropo_correction,
         unw_shape=unw_shape,
         work_dir=work_dir,
